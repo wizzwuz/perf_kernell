@@ -19,13 +19,13 @@ on:
         required: true
         type: string
       device_defconfig:
-        required: false
+        required: true
         type: string
       common_defconfig:
-        required: false
+        required: true
         type: string
       os:
-        required: false
+        required: true
         type: string
         default: ubuntu-24.04
 
