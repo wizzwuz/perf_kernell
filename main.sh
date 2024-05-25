@@ -4,21 +4,21 @@
 # ------------------------------------------------------------
 
 # Kernel
-KERNEL_NAME="Bootlegger"
-KERNEL_GIT="https://github.com/silvzr/bootlegger_kernel_archive.git"
-KERNEL_BRANCH=""
+KERNEL_NAME="Perf"
+KERNEL_GIT="https://github.com/selfmusing/kernel_xiaomi_violet.git"
+KERNEL_BRANCH="14"
 
 # KernelSU
 KERNELSU_REPO="silvzr/KernelSU"
 KSU_ENABLED="false"
 
 # Anykernel3
-ANYKERNEL3_GIT="https://github.com/silvzr/AnyKernel3.git"
+ANYKERNEL3_GIT="https://github.com/kibria5/AnyKernel3.git"
 ANYKERNEL3_BRANCH="master"
 
 # Build
-DEVICE_CODE="davinci"
-DEVICE_DEFCONFIG="davinci_defconfig"
+DEVICE_CODE="violet"
+DEVICE_DEFCONFIG="vendor/violet-perf_deconfig"
 COMMON_DEFCONFIG=""
 DEVICE_ARCH="arch/arm64"
 
