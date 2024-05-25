@@ -46,14 +46,24 @@ if [[ $3 ]]; then
     echo "Input changed KERNEL_BRANCH to $3"
 fi
 
-if [[ $4 ]]; then
-    DEVICE_DEFCONFIG=$4
-    echo "Input changed DEVICE_DEFCONFIG to $4"
+if [[ $4 == *.git ]]; then
+    ANYKERNEL3_GIT=$4
+    echo "Input changed KERNEL_GIT to $4"
 fi
 
 if [[ $5 ]]; then
-    COMMON_DEFCONFIG=$5
-    echo "Input changed COMMON_DEFCONFIG to $5"
+    DEVICE_CODE=$5
+    echo "Input changed DEVICE_CODE to $5"
+fi
+
+if [[ $6 ]]; then
+    DEVICE_DEFCONFIG=$6
+    echo "Input changed DEVICE_DEFCONFIG to $6"
+fi
+
+if [[ $7 ]]; then
+    COMMON_DEFCONFIG=$7
+    echo "Input changed COMMON_DEFCONFIG to $7"
 fi
 
 # Set variables
@@ -72,8 +82,8 @@ CLANG_SOURCE="https://github.com/$CLANG_REPO"
 README="https://github.com/silvzr/bootlegger_kernel_archive/blob/master/README.md"
 
 if [[ ! -z "$COMMON_DEFCONFIG" ]]; then
-    DEVICE_DEFCONFIG=$5
-    COMMON_DEFCONFIG=$4
+    DEVICE_DEFCONFIG=$7
+    COMMON_DEFCONFIG=$6
 fi
 
 DEVICE_DEFCONFIG_FILE="$KERNEL_DIR/$DEVICE_ARCH/configs/$DEVICE_DEFCONFIG"
