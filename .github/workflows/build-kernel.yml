@@ -38,6 +38,11 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - name: Environment
+        id: env
+        run: |
+            echo "Setting up the environment"
+            sudo bash env.sh
       - name: Build
         id: build
         run: |

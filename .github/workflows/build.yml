@@ -44,20 +44,6 @@ on:
         default: ubuntu-latest
 
 jobs:
-  env:
-    runs-on: ${{ inputs.os }}
-    steps:
-      - name: Checkout
-        id: checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Environment
-        id: environment
-        run: |
-          cd $GITHUB_WORKSPACE
-          sudo bash env.sh
-
   build-manager:
     if: ${{ inputs.Build_Manager }}
     uses: ./.github/workflows/build-manager.yml
@@ -66,7 +52,6 @@ jobs:
     
   build-ksu:
     if: ${{ inputs.Build_KSU }}
-    needs: env
     uses: ./.github/workflows/build-kernel.yml
     with:
       include_ksu: "KSU"
@@ -80,7 +65,6 @@ jobs:
 
   build-nonksu:
     if: ${{ inputs.Build_NonKSU }}
-    needs: env
     uses: ./.github/workflows/build-kernel.yml
     with:
       include_ksu: "NonKSU"
@@ -93,7 +77,7 @@ jobs:
       os: ${{ inputs.os }}
       
   build:
-    needs: [env, build-manager, build-ksu, build-nonksu]
+    needs: [build-manager, build-ksu, build-nonksu]
     if: |
       always() &&
       !failure() &&
