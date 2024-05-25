@@ -1,12 +1,10 @@
-# MilkKernel - Action
-
-**Dynamic Kernel**
+# Bootlegger - Releases
 
 **For davinci | Mi 9T / Redmi K20**
 
-**Includes KernelSU**
+**Includes KernelSU variant**
 
-Please read following **[README](https://github.com/SchweGELBin/kernel_milk_davinci/blob/master/README.md)**
+Please read following **[README](https://github.com/silvzr/bootlegger_kernel_archive/blob/master/README.md)**
 
 ## Custom Kernel
 - To build your own custom kernel, fork this repository

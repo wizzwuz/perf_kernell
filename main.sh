@@ -4,16 +4,16 @@
 # ------------------------------------------------------------
 
 # Kernel
-KERNEL_NAME="MilkKernel"
-KERNEL_GIT="https://github.com/SchweGELBin/kernel_milk_davinci.git"
-KERNEL_BRANCH="vantom-14"
+KERNEL_NAME="Bootlegger"
+KERNEL_GIT="https://github.com/silvzr/bootlegger_kernel_archive.git"
+KERNEL_BRANCH=""
 
 # KernelSU
-KERNELSU_REPO="tiann/KernelSU"
+KERNELSU_REPO="silvzr/KernelSU"
 KSU_ENABLED="false"
 
 # Anykernel3
-ANYKERNEL3_GIT="https://github.com/SchweGELBin/AnyKernel3_davinci.git"
+ANYKERNEL3_GIT="https://github.com/silvzr/AnyKernel3.git"
 ANYKERNEL3_BRANCH="master"
 
 # Build
@@ -39,14 +39,14 @@ KERNEL_DIR="$WORKDIR/$KERNEL_NAME"
 
 KERNELSU_SOURCE="https://github.com/$KERNELSU_REPO"
 CLANG_SOURCE="https://github.com/$CLANG_REPO"
-README="https://github.com/SchweGELBin/kernel_milk_davinci/blob/master/README.md"
+README="https://github.com/silvzr/bootlegger_kernel_archive/blob/master/README.md"
 
 DEVICE_DEFCONFIG_FILE="$KERNEL_DIR/$DEVICE_ARCH/configs/$DEVICE_DEFCONFIG"
 IMAGE="$KERNEL_DIR/out/$DEVICE_ARCH/boot/Image.gz"
 DTB="$KERNEL_DIR/out/$DEVICE_ARCH/boot/dtb.img"
 DTBO="$KERNEL_DIR/out/$DEVICE_ARCH/boot/dtbo.img"
 
-export KBUILD_BUILD_USER=SchweGELBin
+export KBUILD_BUILD_USER=silvzr
 export KBUILD_BUILD_HOST=GitHubCI
 
 # Highlight
