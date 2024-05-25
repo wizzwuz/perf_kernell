@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       Build_KSU:
-        required: true
+        required: false
         type: boolean
-        default: true
+        default: false
       Build_NonKSU:
         required: true
         type: boolean
@@ -18,30 +18,30 @@ on:
       Kernel_Git:
         required: true
         type: string
-        default: https://github.com/silvzr/bootlegger_kernel_archive.git
+        default: https://github.com/selfmusing/kernel_xiaomi_violet.git
       Kernel_Branch:
         required: true
         type: string
-        default: pos14
+        default: 14
       AnyKernel3_Git:
         required: true
         type: string
-        default: https://github.com/silvzr/AnyKernel3.git
+        default: https://github.com/kibria5/AnyKernel3.git
       Device_Code:
         required: true
         type: string
-        default: davinci
+        default: violet
       Device_Defconfig:
         required: true
         type: string
-        default: davinci_defconfig
+        default: vendor/violet-perf_defconfig
       Common_Defconfig:
         required: false
         type: string
       os:
         required: true
         type: string
-        default: ubuntu-24.04
+        default: ubuntu-latest
 
 jobs:
   build-manager:
