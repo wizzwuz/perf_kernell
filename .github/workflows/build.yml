@@ -41,7 +41,7 @@ on:
       os:
         required: true
         type: string
-        default: ubuntu-latest
+        default: ubuntu-24.04
 
 jobs:
   build-manager:
