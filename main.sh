@@ -127,7 +127,7 @@ KERNEL_VERSION=$(cat $KERNEL_DIR/Makefile | grep -w "VERSION =" | cut -d '=' -f 
 [ ${KERNEL_VERSION: -1} = "." ] && KERNEL_VERSION=${KERNEL_VERSION::-1}
 msg "Kernel Version: $KERNEL_VERSION"
 
-TITLE=$KERNEL_NAME-$KERNEL_VERSION-$KERNEL_BRANCH
+TITLE=$KERNEL_NAME-$KERNEL_VERSION
 
 cd $KERNEL_DIR
 
@@ -142,6 +142,8 @@ if [[ $KSU_ENABLED == "true" ]]; then
     KSU_GIT_VERSION=$(cd KernelSU && git rev-list --count HEAD)
     KERNELSU_VERSION=$(($KSU_GIT_VERSION + 10200))
     msg "KernelSU Version: $KERNELSU_VERSION"
+
+    TITLE=$TITLE-$KERNELSU_VERSION
     sed -i "s/^CONFIG_LOCALVERSION=.*/CONFIG_LOCALVERSION=\"-$KERNELSU_VERSION-$KERNEL_NAME\"/" $DEVICE_DEFCONFIG_FILE
 else
     echo "KernelSU Disabled"
@@ -192,9 +194,9 @@ cp $DTBO .
 # Archive
 mkdir -p $WORKDIR/out
 if [[ $KSU_ENABLED == "true" ]]; then
-  ZIP_NAME="$KERNEL_NAME-$KERNEL_VERSION-$KERNEL_BRANCH-KSU.zip"
+  ZIP_NAME="$KERNEL_NAME-KSU.zip"
 else
-  ZIP_NAME="$KERNEL_NAME-$KERNEL_VERSION-$KERNEL_BRANCH-NonKSU.zip"
+  ZIP_NAME="$KERNEL_NAME-NonKSU.zip"
 fi
 TIME=$(TZ='Europe/Berlin' date +"%Y-%m-%d %H:%M:%S")
 find ./ * -exec touch -m -d "$TIME" {} \;
