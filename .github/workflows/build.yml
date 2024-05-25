@@ -27,6 +27,9 @@ on:
         required: true
         type: string
         default: davinci_defconfig
+      Common_Defconfig:
+        required: false
+        type: string
       os:
         required: true
         type: string
@@ -62,6 +65,7 @@ jobs:
       kernel_git: ${{ inputs.Kernel_Git }}
       kernel_branch: ${{ inputs.Kernel_Branch }}
       device_defconfig: ${{ inputs.Device_Defconfig }}
+      common_defconfig: ${{ inputs.Common_Defconfig }}
       os: ${{ inputs.os }}
 
   build-nonksu:
@@ -73,6 +77,7 @@ jobs:
       kernel_git: ${{ inputs.Kernel_Git }}
       kernel_branch: ${{ inputs.Kernel_Branch }}
       device_defconfig: ${{ inputs.Device_Defconfig }}
+      common_defconfig: ${{ inputs.Common_Defconfig }}
       os: ${{ inputs.os }}
       
   build:

@@ -19,6 +19,7 @@ ANYKERNEL3_BRANCH="master"
 # Build
 DEVICE_CODE="davinci"
 DEVICE_DEFCONFIG="davinci_defconfig"
+COMMON_DEFCONFIG=""
 DEVICE_ARCH="arch/arm64"
 
 # Clang
@@ -50,6 +51,11 @@ if [[ $4 ]]; then
     echo "Input changed DEVICE_DEFCONFIG to $4"
 fi
 
+if [[ $5 ]]; then
+    COMMON_DEFCONFIG=$5
+    echo "Input changed COMMON_DEFCONFIG to $5"
+fi
+
 # Set variables
 WORKDIR="$(pwd)"
 
@@ -64,6 +70,11 @@ KERNEL_DIR="$WORKDIR/$KERNEL_NAME"
 KERNELSU_SOURCE="https://github.com/$KERNELSU_REPO"
 CLANG_SOURCE="https://github.com/$CLANG_REPO"
 README="https://github.com/silvzr/bootlegger_kernel_archive/blob/master/README.md"
+
+if [[ ! -z "$COMMON_DEFCONFIG" ]]; then
+    DEVICE_DEFCONFIG=$5
+    COMMON_DEFCONFIG=$4
+fi
 
 DEVICE_DEFCONFIG_FILE="$KERNEL_DIR/$DEVICE_ARCH/configs/$DEVICE_DEFCONFIG"
 IMAGE="$KERNEL_DIR/out/$DEVICE_ARCH/boot/Image.gz"
@@ -156,6 +167,7 @@ LLVM_IAS=1"
 
 rm -rf out
 make O=out $args $DEVICE_DEFCONFIG
+make O=out $args $COMMON_DEFCONFIG
 make O=out $args kernelversion
 make O=out $args -j"$(nproc --all)"
 msg "Kernel version: $KERNEL_VERSION"
