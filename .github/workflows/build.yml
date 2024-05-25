@@ -11,10 +11,6 @@ on:
         required: true
         type: boolean
         default: true
-      Build_Manager:
-        required: true
-        type: boolean
-        default: false
       Kernel_Git:
         required: true
         type: string
@@ -43,13 +39,7 @@ on:
         type: string
         default: ubuntu-latest
 
-jobs:
-  build-manager:
-    if: ${{ inputs.Build_Manager }}
-    uses: ./.github/workflows/build-manager.yml
-    with:
-      os: ${{ inputs.os }}
-    
+jobs:    
   build-ksu:
     if: ${{ inputs.Build_KSU }}
     uses: ./.github/workflows/build-kernel.yml
@@ -77,7 +67,7 @@ jobs:
       os: ${{ inputs.os }}
       
   build:
-    needs: [build-manager, build-ksu, build-nonksu]
+    needs: [build-ksu, build-nonksu]
     if: |
       always() &&
       !failure() &&
