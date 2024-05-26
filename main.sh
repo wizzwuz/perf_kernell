@@ -132,7 +132,17 @@ TITLE=$KERNEL_NAME-$KERNEL_VERSION
 cd $KERNEL_DIR
 
 msg "KernelSU"
-if [[ $KSU_ENABLED == "true" ]]; then
+if [[ $KSU_ENABLED == "true" ]] && [[ $(find . -mindepth 0 -maxdepth 4 \( -iname "ksu" -o -iname "kernelsu" \) -type d) ]]; then
+
+    echo "CONFIG_KSU=y" >> $DEVICE_DEFCONFIG_FILE
+    echo "CONFIG_KSU_SUSFS=y" >> $DEVICE_DEFCONFIG_FILE
+
+    KSU_GIT_VERSION=$(cd $KERNEL_DIR && git rev-list --count HEAD)
+    KERNELSU_VERSION=$(($KSU_GIT_VERSION + 10200))
+    msg "KernelSU Version: $KERNELSU_VERSION"
+    sed -i "s/^CONFIG_LOCALVERSION=.*/CONFIG_LOCALVERSION=\"-$KERNEL_BRANCH-$KERNEL_NAME-KSU\"/" $DEVICE_DEFCONFIG_FILE
+elif
+   [[ $KSU_ENABLED == "true" ]]; then
     curl -LSs "https://raw.githubusercontent.com/$KERNELSU_REPO/main/kernel/setup.sh" | bash -s main
 
     echo "CONFIG_KPROBES=y" >> $DEVICE_DEFCONFIG_FILE
@@ -145,7 +155,8 @@ if [[ $KSU_ENABLED == "true" ]]; then
 
     TITLE=$TITLE-$KERNELSU_VERSION
     sed -i "s/^CONFIG_LOCALVERSION=.*/CONFIG_LOCALVERSION=\"-$KERNELSU_VERSION-$KERNEL_NAME\"/" $DEVICE_DEFCONFIG_FILE
-else
+fi
+if [[ $KSU_ENABLED == "false" ]]; then
     echo "KernelSU Disabled"
     KERNELSU_VERSION="Disabled"
     sed -i "s/^CONFIG_LOCALVERSION=.*/CONFIG_LOCALVERSION=\"-$KERNEL_NAME\"/" $DEVICE_DEFCONFIG_FILE
