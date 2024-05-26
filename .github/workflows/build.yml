@@ -3,14 +3,14 @@ name: CI Build
 on:
   workflow_dispatch:
     inputs:
-      Build_KSU:
+      Build_Kernel:
         required: true
-        type: boolean
-        default: true
-      Build_NonKSU:
-        required: true
-        type: boolean
-        default: true
+        type: choice
+        default: KSU & NonKSU
+        options:
+        - KSU
+        - NonKSU
+        - KSU & NonKSU
       Kernel_Git:
         required: true
         type: string
@@ -42,7 +42,7 @@ on:
 
 jobs:    
   build-ksu:
-    if: ${{ inputs.Build_KSU }}
+    if: ${{ inputs.Build_Kernel == 'KSU' || inputs.Build_Kernel == 'KSU & NonKSU' }}
     uses: ./.github/workflows/build-kernel.yml
     with:
       include_ksu: "KSU"
@@ -55,7 +55,7 @@ jobs:
       os: ${{ inputs.os }}
 
   build-nonksu:
-    if: ${{ inputs.Build_NonKSU }}
+    if: ${{ inputs.Build_Kernel == 'NonKSU' || inputs.Build_Kernel == 'KSU & NonKSU' }}
     uses: ./.github/workflows/build-kernel.yml
     with:
       include_ksu: "NonKSU"
@@ -67,7 +67,7 @@ jobs:
       common_defconfig: ${{ inputs.Common_Defconfig }}
       os: ${{ inputs.os }}
       
-  build:
+  release:
     needs: [build-ksu, build-nonksu]
     if: |
       always() &&
