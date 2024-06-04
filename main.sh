@@ -188,7 +188,9 @@ LLVM_IAS=1"
 
 rm -rf out
 make O=out $args $DEVICE_DEFCONFIG
-make O=out $args $COMMON_DEFCONFIG
+if [[ ! -z "$COMMON_DEFCONFIG" ]]; then
+  make O=out $args $COMMON_DEFCONFIG
+fi
 make O=out $args kernelversion
 make O=out $args -j"$(nproc --all)"
 msg "Kernel version: $KERNEL_VERSION"
