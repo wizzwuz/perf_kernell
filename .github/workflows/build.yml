@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       Build_KSU:
-        required: false
+        required: true
         type: boolean
-        default: false
+        default: true
       Build_NonKSU:
         required: true
         type: boolean
@@ -18,7 +18,7 @@ on:
       Kernel_Branch:
         required: true
         type: string
-        default: 14
+        default: main
       AnyKernel3_Git:
         required: true
         type: string
@@ -33,6 +33,7 @@ on:
         default: vendor/violet-perf_defconfig
       Common_Defconfig:
         required: false
+        default: 
         type: string
       os:
         required: true
