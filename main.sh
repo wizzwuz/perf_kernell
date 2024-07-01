@@ -23,7 +23,7 @@ COMMON_DEFCONFIG=""
 DEVICE_ARCH="arch/arm64"
 
 # Clang
-CLANG_REPO="ZyCromerZ/Clang"
+CLANG_REPO="psionicprjkt/android_prebuilts_clang_host_linux-x86_clang-r522817"
 
 # ------------------------------------------------------------
 
@@ -69,8 +69,6 @@ fi
 # Set variables
 WORKDIR="$(pwd)"
 
-CLANG_DLINK="$(curl -s https://api.github.com/repos/$CLANG_REPO/releases/latest\
-| grep -wo "https.*" | grep Clang-.*.tar.gz | sed 's/.$//')"
 CLANG_DIR="$WORKDIR/Clang/bin"
 
 KERNEL_REPO="${KERNEL_GIT::-4}/"
@@ -107,10 +105,8 @@ cd $WORKDIR
 msg "Setup"
 
 msg "Clang"
-mkdir -p Clang
-aria2c -s16 -x16 -k1M $CLANG_DLINK -o Clang.tar.gz
-tar -C Clang/ -zxvf Clang.tar.gz
-rm -rf Clang.tar.gz
+
+git clone --depth=1 https://github.com/psionicprjkt/android_prebuilts_clang_host_linux-x86_clang-r522817 Clang && git lfs fetch && git lfs install && git lfs checkout
 
 CLANG_VERSION="$($CLANG_DIR/clang --version | head -n 1 | cut -f1 -d "(" | sed 's/.$//')"
 CLANG_VERSION=${CLANG_VERSION::-3} # May get removed later
