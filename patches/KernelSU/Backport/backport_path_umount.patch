@@ -1,0 +1,91 @@
+From 457cffcd056fee2bbd9f9c56ae0d919babf5b996 Mon Sep 17 00:00:00 2001
+From: OnlyTomInSecond <q2781273965@gmail.com>
+Date: Thu, 19 Oct 2023 17:55:23 +0800
+Subject: [PATCH] fs: add path_umount implementation
+
+https://elixir.bootlin.com/linux/v5.9/source/fs/namespace.c#L1728
+
+- Full KernelSU gki features on non-gki hurray!
+- Add umount code for KernelSU
+- fs/namespace.c path_umount [5.10.9]
+- sake of demo-ing off susfs-implementation
+
+Link: https://github.com/tiann/KernelSU/discussions/955#discussioncomment-7854955
+ref: https://github.com/tiann/KernelSU/commit/b4cfc2f2980b5904d045b04931c67aa7d11a8c80
+Signed-off-by: TogoFire <togofire@mailfence.com>
+Change-Id: Ieab267482936bb3df64e201629b28f25a1437a12
+Co-Authored-By: Christoph Hellwig <hch@lst.de>
+Co-Authored-By: Marcos <98092901+chiteroman@users.noreply.github.com>
+Co-Authored-By: Celica Sylphil <64072399+natsumerinchan@users.noreply.github.com>
+---
+ fs/internal.h  |  2 ++
+ fs/namespace.c | 46 ++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 48 insertions(+)
+
+--- a/fs/internal.h
++++ b/fs/internal.h
+@@ -89,6 +89,8 @@ extern void __init mnt_init(void);
+ extern int __mnt_want_write_file(struct file *);
+ extern void __mnt_drop_write_file(struct file *);
+ 
++int path_umount(struct path *path, int flags);
++
+ /*
+  * fs_struct.c
+
+--- a/fs/namespace.c
++++ b/fs/namespace.c
+@@ -1685,6 +1685,52 @@ static inline bool may_mandlock(void)
+ }
+ #endif
+ 
++/**
++ * path_mounted - check whether path is mounted
++ * @path: path to check
++ *
++ * Determine whether @path refers to the root of a mount.
++ *
++ * Return: true if @path is the root of a mount, false if not.
++ */
++static inline bool path_mounted(const struct path *path)
++{
++	return path->mnt->mnt_root == path->dentry;
++}
++
++static int can_umount(const struct path *path, int flags)
++{
++	struct mount *mnt = real_mount(path->mnt);
++
++	if (!may_mount())
++		return -EPERM;
++	if (!path_mounted(path))
++		return -EINVAL;
++	if (!check_mnt(mnt))
++		return -EINVAL;
++	if (mnt->mnt.mnt_flags & MNT_LOCKED) /* Check optimistically */
++		return -EINVAL;
++	if (flags & MNT_FORCE && !capable(CAP_SYS_ADMIN))
++		return -EPERM;
++	return 0;
++}
++
++// caller is responsible for flags being sane
++int path_umount(struct path *path, int flags)
++{
++	struct mount *mnt = real_mount(path->mnt);
++	int ret;
++
++	ret = can_umount(path, flags);
++	if (!ret)
++		ret = do_umount(mnt, flags);
++
++	/* we mustn't call path_put() as that would clear mnt_expiry_mark */
++	dput(path->dentry);
++	mntput_no_expire(mnt);
++	return ret;
++}
++
+ /*
+  * Now umount can handle mount points as well as block devices.
+  * This is important for filesystems which use unnamed block devices.
+

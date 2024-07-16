@@ -1,0 +1,27 @@
+From 7f3d1f9c7b5de8c8868ec916c8b2362e00dd72d0 Mon Sep 17 00:00:00 2001
+From: backslashxx <118538522+backslashxx@users.noreply.github.com>
+Date: Fri, 15 Mar 2024 17:02:24 +0800
+Subject: [PATCH] Makefile: strip out EXTRAVERSION
+
+Now tracking
+https://github.com/openela/kernel-lts/commits/linux-4.14.y/
+
+openela extraversion just makes kernel UTS_RELEASE too long
+strip it out.
+---
+ Makefile | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+--- a/Makefile
++++ b/Makefile
+@@ -281,7 +281,8 @@ include scripts/Kbuild.include
+ 
+ # Read KERNELRELEASE from include/config/kernel.release (if it exists)
+ KERNELRELEASE = $(shell cat include/config/kernel.release 2> /dev/null)
+-KERNELVERSION = $(VERSION)$(if $(PATCHLEVEL),.$(PATCHLEVEL)$(if $(SUBLEVEL),.$(SUBLEVEL)))$(EXTRAVERSION)
++KERNELVERSION = $(VERSION)$(if $(PATCHLEVEL),.$(PATCHLEVEL)$(if $(SUBLEVEL),.$(SUBLEVEL)))
++#KERNELVERSION = $(VERSION)$(if $(PATCHLEVEL),.$(PATCHLEVEL)$(if $(SUBLEVEL),.$(SUBLEVEL)))$(EXTRAVERSION)
+ export VERSION PATCHLEVEL SUBLEVEL KERNELRELEASE KERNELVERSION
+ 
+ # SUBARCH tells the usermode build what the underlying arch is.  That is set
+
