@@ -23,7 +23,7 @@ COMMON_DEFCONFIG=""
 DEVICE_ARCH="arch/arm64"
 
 # Clang
-CLANG_REPO="ZyCromerZ/Clang"
+CLANG_REPO="psionicprjkt/android_prebuilts_clang_host_linux-x86_clang-r522817"
 
 # ------------------------------------------------------------
 
@@ -69,8 +69,6 @@ fi
 # Set variables
 WORKDIR="$(pwd)"
 
-CLANG_DLINK="$(curl -s https://api.github.com/repos/$CLANG_REPO/releases/latest\
-| grep -wo "https.*" | grep Clang-.*.tar.gz | sed 's/.$//')"
 CLANG_DIR="$WORKDIR/Clang/bin"
 
 KERNEL_REPO="${KERNEL_GIT::-4}/"
@@ -79,7 +77,7 @@ KERNEL_DIR="$WORKDIR/$KERNEL_NAME"
 
 KERNELSU_SOURCE="https://github.com/$KERNELSU_REPO"
 CLANG_SOURCE="https://github.com/$CLANG_REPO"
-README="https://github.com/silvzr/bootlegger_kernel_archive/blob/master/README.md"
+README="https://github.com/selfmusing/perf_kernel/blob/master/README.md"
 
 if [[ ! -z "$COMMON_DEFCONFIG" ]]; then
     DEVICE_DEFCONFIG=$7
@@ -107,10 +105,9 @@ cd $WORKDIR
 msg "Setup"
 
 msg "Clang"
-mkdir -p Clang
-aria2c -s16 -x16 -k1M $CLANG_DLINK -o Clang.tar.gz
-tar -C Clang/ -zxvf Clang.tar.gz
-rm -rf Clang.tar.gz
+
+git clone --depth=1 $CLANG_SOURCE Clang && cd Clang && git lfs fetch && git lfs install && git lfs checkout && cd ..
+
 
 CLANG_VERSION="$($CLANG_DIR/clang --version | head -n 1 | cut -f1 -d "(" | sed 's/.$//')"
 CLANG_VERSION=${CLANG_VERSION::-3} # May get removed later
@@ -197,11 +194,11 @@ cp $DTBO .
 # Archive
 mkdir -p $WORKDIR/out
 if [[ $KSU_ENABLED == "true" ]]; then
-  ZIP_NAME="$KERNEL_NAME-KSU.zip"
+  ZIP_NAME="$KERNEL_NAME-$KERNEL_VERSION-KSU.zip"
 else
-  ZIP_NAME="$KERNEL_NAME-NonKSU.zip"
+  ZIP_NAME="$KERNEL_NAME-$KERNEL_VERSION-NonKSU.zip"
 fi
-TIME=$(TZ='Europe/Berlin' date +"%Y-%m-%d %H:%M:%S")
+TIME=$(TZ='Asi/Kolkata' date +"%Y-%m-%d %H:%M:%S")
 find ./ * -exec touch -m -d "$TIME" {} \;
 zip -r9 $ZIP_NAME *
 cp *.zip $WORKDIR/out
