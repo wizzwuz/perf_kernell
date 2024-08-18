@@ -23,7 +23,7 @@ COMMON_DEFCONFIG=""
 DEVICE_ARCH="arch/arm64"
 
 # Clang
-CLANG_REPO="psionicprjkt/android_prebuilts_clang_host_linux-x86_clang-r522817"
+CLANG_REPO="itsshashanksp/android_prebuilts_clang_host_linux-x86_clang-r530567"
 
 # ------------------------------------------------------------
 
@@ -76,7 +76,7 @@ KERNEL_SOURCE="${KERNEL_REPO::-1}/tree/$KERNEL_BRANCH"
 KERNEL_DIR="$WORKDIR/$KERNEL_NAME"
 
 KERNELSU_SOURCE="https://github.com/$KERNELSU_REPO"
-CLANG_SOURCE="https://github.com/$CLANG_REPO"
+CLANG_SOURCE="https://gitlab.com/$CLANG_REPO"
 README="https://github.com/selfmusing/perf_kernel/blob/master/README.md"
 
 if [[ ! -z "$COMMON_DEFCONFIG" ]]; then
@@ -104,9 +104,9 @@ cd $WORKDIR
 # Setup
 msg "Setup"
 
-msg "Clang 18.0.1"
+msg "Clang r530567"
 
-git clone --depth=1 $CLANG_SOURCE Clang && cd Clang && git lfs fetch && git lfs install && git lfs checkout && cd ..
+git clone --depth=1 $CLANG_SOURCE Clang
 
 
 CLANG_VERSION="$($CLANG_DIR/clang --version | head -n 1 | cut -f1 -d "(" | sed 's/.$//')"
