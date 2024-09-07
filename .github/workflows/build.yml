@@ -22,7 +22,7 @@ on:
       AnyKernel3_Git:
         required: true
         type: string
-        default: https://github.com/kibria5/AnyKernel3.git
+        default: https://github.com/selfmusing/AnyKernel3.git
       Device_Code:
         required: true
         type: string
