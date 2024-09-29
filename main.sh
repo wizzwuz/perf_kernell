@@ -12,6 +12,10 @@ KERNEL_BRANCH="14"
 KERNELSU_REPO="tiann/KernelSU"
 KSU_ENABLED="false"
 
+# KernelSU Custom Manager
+MANAGER_EXPECTED_SIZE="0x354"
+MANAGER_EXPECTED_HASH="55a3dc257ef27810af6eb6e5d0b0f2ee1af1c57626dc67260abffb281db37836"
+
 # Anykernel3
 ANYKERNEL3_GIT="https://github.com/selfmusing/AnyKernel3.git"
 ANYKERNEL3_BRANCH="master"
@@ -236,22 +240,25 @@ elif
         cp ./patches/KernelSU/revert_drop_non_gki.patch  $KERNEL_DIR/KernelSU/
         cd $KERNEL_DIR/KernelSU && patch -p1 < revert_drop_non_gki.patch
         msg "Readding support for Non GKI kernels..." && cd $WORKDIR
-		if [[ $KSU_MANAGER == "true" ]]; then
-		    cd $WORKDIR/out/manager && wget -q https://nightly.link/tiann/KernelSU/workflows/build-manager/main/ksud-x86_64-unknown-linux-musl.zip
-			unzip ksud-x86_64-unknown-linux-musl.zip && mv x86_64-unknown-linux-musl/release/* .
-			mv *.apk manager.apk && chmod +x ksud
-			MANAGER_SIGNATURE=$(./ksud debug get-sign manager.apk)
-			MANAGER_EXPECTED_SIZE=$(echo "$MANAGER_SIGNATURE" | grep 'size:' | sed 's/.*size: //; s/,.*//')
-			MANAGER_EXPECTED_HASH=$(echo "$MANAGER_SIGNATURE" | grep 'hash:' | sed 's/.*hash: //; s/,.*//')
-			cd $KERNEL_DIR/KernelSU
-			sed -i "s/^KSU_EXPECTED_SIZE := .*/KSU_EXPECTED_SIZE := $MANAGER_EXPECTED_SIZE/" kernel/Makefile
-			sed -i "s/^KSU_EXPECTED_HASH := .*/KSU_EXPECTED_HASH := $MANAGER_EXPECTED_HASH/" kernel/Makefile
-			msg "Backporting latest KSU manager..." && cd $WORKDIR
-			msg "KSU_EXPECTED_SIZE := $MANAGER_EXPECTED_SIZE"
-            msg "KSU_EXPECTED_HASH := $MANAGER_EXPECTED_HASH"
-		fi
+	if [[ $KSU_MANAGER == "true" ]]; then
+	    cd $WORKDIR/out/manager && wget -q https://nightly.link/tiann/KernelSU/workflows/build-manager/main/ksud-x86_64-unknown-linux-musl.zip
+	    unzip ksud-x86_64-unknown-linux-musl.zip && mv x86_64-unknown-linux-musl/release/* .
+	    mv *.apk manager.apk && chmod +x ksud
+	    MANAGER_SIGNATURE=$(./ksud debug get-sign manager.apk)
+	    MANAGER_EXPECTED_SIZE=$(echo "$MANAGER_SIGNATURE" | grep 'size:' | sed 's/.*size: //; s/,.*//')
+	    MANAGER_EXPECTED_HASH=$(echo "$MANAGER_SIGNATURE" | grep 'hash:' | sed 's/.*hash: //; s/,.*//')
+            msg "Backporting latest KSU manager..." && cd $WORKDIR
+	fi
     fi
 
+    if [[ ! -z "$MANAGER_EXPECTED_SIZE" ]] && [[ ! -z "$MANAGER_EXPECTED_HASH" ]]; then
+	cd $KERNEL_DIR/KernelSU
+	sed -i "s/^KSU_EXPECTED_SIZE := .*/KSU_EXPECTED_SIZE := $MANAGER_EXPECTED_SIZE/" kernel/Makefile
+	sed -i "s/^KSU_EXPECTED_HASH := .*/KSU_EXPECTED_HASH := $MANAGER_EXPECTED_HASH/" kernel/Makefile
+	msg "KSU_EXPECTED_SIZE := $MANAGER_EXPECTED_SIZE"
+        msg "KSU_EXPECTED_HASH := $MANAGER_EXPECTED_HASH" && cd $WORKDIR
+    fi
+	
     cp ./patches/KernelSU/Backport/hook_patches_ksu-$KERNEL_VER.patch $KERNEL_DIR/
     cd $KERNEL_DIR && patch -p1 < hook_patches_ksu-$KERNEL_VER.patch
     msg "Importing KSU hooks for $KERNEL_VER kernel..." && cd $WORKDIR
