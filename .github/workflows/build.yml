@@ -38,7 +38,7 @@ on:
       os:
         required: true
         type: string
-        default: ubuntu-latest
+        default: ubuntu-22.04
 
 jobs:    
   build-ksu:
