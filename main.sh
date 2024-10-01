@@ -13,7 +13,7 @@ KERNELSU_REPO="tiann/KernelSU"
 KSU_ENABLED="false"
 
 # Anykernel3
-ANYKERNEL3_GIT="https://github.com/kibria5/AnyKernel3.git"
+ANYKERNEL3_GIT="https://github.com/selfmusing/AnyKernel3.git"
 ANYKERNEL3_BRANCH="master"
 
 # Build
