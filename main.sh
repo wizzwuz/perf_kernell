@@ -22,9 +22,6 @@ DEVICE_DEFCONFIG="vendor/violet-perf_deconfig"
 COMMON_DEFCONFIG=""
 DEVICE_ARCH="arch/arm64"
 
-# Clang
-CLANG_REPO="itsshashanksp/android_prebuilts_clang_host_linux-x86_clang-r530567"
-
 # ------------------------------------------------------------
 
 # Input Variables
@@ -76,7 +73,6 @@ KERNEL_SOURCE="${KERNEL_REPO::-1}/tree/$KERNEL_BRANCH"
 KERNEL_DIR="$WORKDIR/$KERNEL_NAME"
 
 KERNELSU_SOURCE="https://github.com/$KERNELSU_REPO"
-CLANG_SOURCE="https://gitlab.com/$CLANG_REPO"
 README="https://github.com/selfmusing/perf_kernel/blob/master/README.md"
 
 if [[ ! -z "$COMMON_DEFCONFIG" ]]; then
@@ -106,8 +102,10 @@ msg "Setup"
 
 msg "Clang r530567"
 
-git clone --depth=1 $CLANG_SOURCE Clang
-
+mkdir -p Clang
+curl -o Clang.tar.gz https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/main/clang-r530567.tar.gz
+tar -C Clang/ -zxvf Clang.tar.gz
+rm -rf Clang.tar.gz
 
 CLANG_VERSION="$($CLANG_DIR/clang --version | head -n 1 | cut -f1 -d "(" | sed 's/.$//')"
 CLANG_VERSION=${CLANG_VERSION::-3} # May get removed later
