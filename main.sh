@@ -153,7 +153,8 @@ version_le() {
     [ "$(printf '%s\n' "$1" "$2" | sort -V | head -n1)" = "$1" ]
 }
 
-#
+# Avoid dirty uname
+touch $KERNEL_DIR/.scmversion
 
 if [[ $KERNEL_VER == "4.14" ]]; then
     cp ./patches/strip_out_extraversion.patch $KERNEL_DIR/
