@@ -214,7 +214,7 @@ if [[ $KSU_ENABLED == "true" ]] && [[ ! -z "$KERNELSU_DIR" ]]; then
         KERNELSU_VERSION=$(cat $KERNELSU_DIR/ksu.h | grep "KERNEL_SU_VERSION" | cut -c26-)
     fi
     
-    SUSFS_VERSION=$(grep "SuSFS version:" $WORKDIR/patches/KernelSU/SuSFS/$KERNEL_VER/add_susfs_in_kernel-$KERNEL_VER.patch | cut -d' ' -f3)
+    SUSFS_VERSION=$(grep "SUSFS_VERSION" $WORKDIR/patches/KernelSU/SuSFS/$KERNEL_VER/susfs.h | cut -d '"' -f2 )
     msg "KernelSU Version: $KERNELSU_VERSION"
     msg "SuSFS version: $SUSFS_VERSION"
     sed -i "s/^CONFIG_LOCALVERSION=.*/CONFIG_LOCALVERSION=\"-$KERNEL_BRANCH-$KERNEL_NAME-кѕυ\"/" $DEVICE_DEFCONFIG_FILE
@@ -282,7 +282,7 @@ elif
 
     KSU_GIT_VERSION=$(cd KernelSU && git rev-list --count HEAD)
     KERNELSU_VERSION=$(($KSU_GIT_VERSION + 10200))
-    SUSFS_VERSION=$(grep "SuSFS version:" $WORKDIR/patches/KernelSU/SuSFS/$KERNEL_VER/add_susfs_in_kernel-$KERNEL_VER.patch | cut -d' ' -f3)
+    SUSFS_VERSION=$(grep "SUSFS_VERSION" $WORKDIR/patches/KernelSU/SuSFS/$KERNEL_VER/susfs.h | cut -d '"' -f2 )
     msg "KernelSU Version: $KERNELSU_VERSION"
     msg "SuSFS version: $SUSFS_VERSION"
     sed -i "s/^CONFIG_LOCALVERSION=.*/CONFIG_LOCALVERSION=\"-$KERNEL_BRANCH-$KERNEL_NAME-кѕυ\"/" $DEVICE_DEFCONFIG_FILE
