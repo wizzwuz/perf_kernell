@@ -27,8 +27,8 @@ COMMON_DEFCONFIG=""
 DEVICE_ARCH="arch/arm64"
 
 # Clang
-CLANG_REPO="crdroidandroid/android_prebuilts_clang_host_linux-x86_clang-r536225"
-CLANG_BRANCH="14.0"
+CLANG_REPO="crdroidandroid/android_prebuilts_clang_host_linux-x86_clang-r547379"
+CLANG_BRANCH="15.0"
 
 # ------------------------------------------------------------
 
