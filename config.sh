@@ -36,19 +36,6 @@ if [[ $KSU_ENABLED == "true" ]] && [[ ! -z "$KERNELSU_DIR" ]]; then
         fi
     fi
 
-    if [[ ! -z "$MANAGER_EXPECTED_SIZE" ]] && [[ ! -z "$MANAGER_EXPECTED_HASH" ]]; then
-	cd $KERNEL_DIR/$KERNELSU_DIR
-        if [[ -d "$KERNEL_DIR/$KERNELSU_DIR/kernel" ]]; then
-	    sed -i '/return check_v2_signature(path, EXPECTED_SIZE, EXPECTED_HASH);/c\
-            \    return (check_v2_signature(path, EXPECTED_SIZE, EXPECTED_HASH) || check_v2_signature(path, '"$MANAGER_EXPECTED_SIZE"', "'"$MANAGER_EXPECTED_HASH"'"));' kernel/apk_sign.c
-        else
-	    sed -i '/return check_v2_signature(path, EXPECTED_SIZE, EXPECTED_HASH);/c\
-            \    return (check_v2_signature(path, EXPECTED_SIZE, EXPECTED_HASH) || check_v2_signature(path, '"$MANAGER_EXPECTED_SIZE"', "'"$MANAGER_EXPECTED_HASH"'"));' apk_sign.c
-        fi
-	msg "KSU_EXPECTED_SIZE := $MANAGER_EXPECTED_SIZE"
-        msg "KSU_EXPECTED_HASH := $MANAGER_EXPECTED_HASH"
-    fi
-
     cp $WORKDIR/patches/KernelSU/Backport/safe_mode_ksu.patch $KERNEL_DIR/
     cd $KERNEL_DIR && patch -p1 < safe_mode_ksu.patch
     msg "Backporting KSU safe mode..."
@@ -68,6 +55,7 @@ if [[ $KSU_ENABLED == "true" ]] && [[ ! -z "$KERNELSU_DIR" ]]; then
     	cp $WORKDIR/patches/KernelSU/SuSFS/$KERNEL_VER/susfs.h $KERNEL_DIR/include/linux/
 	cp $WORKDIR/patches/KernelSU/SuSFS/$KERNEL_VER/sus_su.c $KERNEL_DIR/fs/
 	cp $WORKDIR/patches/KernelSU/SuSFS/$KERNEL_VER/sus_su.h $KERNEL_DIR/include/linux/
+	cp $WORKDIR/patches/KernelSU/SuSFS/$KERNEL_VER/susfs_def.h $KERNEL_DIR/include/linux/
     	cd $KERNEL_DIR && patch -p1 -F 3 < add_susfs_in_kernel-$KERNEL_VER.patch
     	msg "Importing SuSFS for $KERNEL_VER kernel..."
     fi
@@ -83,7 +71,7 @@ if [[ $KSU_ENABLED == "true" ]] && [[ ! -z "$KERNELSU_DIR" ]]; then
         KERNELSU_VERSION=$(cat $KERNELSU_DIR/ksu.h | grep "KERNEL_SU_VERSION" | cut -c26-)
     fi
     
-    SUSFS_VERSION=$(grep "SuSFS version:" $WORKDIR/patches/KernelSU/SuSFS/$KERNEL_VER/add_susfs_in_kernel-$KERNEL_VER.patch | cut -d' ' -f3)
+    SUSFS_VERSION=$(grep "SUSFS_VERSION" $WORKDIR/patches/KernelSU/SuSFS/$KERNEL_VER/susfs.h | cut -d '"' -f2 )
     msg "KernelSU Version: $KERNELSU_VERSION"
     msg "SuSFS version: $SUSFS_VERSION"
     sed -i "s/^CONFIG_LOCALVERSION=.*/CONFIG_LOCALVERSION=\"-$KERNEL_BRANCH-$KERNEL_NAME-κsu\"/" $DEVICE_DEFCONFIG_FILE
@@ -98,7 +86,7 @@ elif
             msg "Backporting path_umount from 5.10.9..."
         fi
 
-        cd $KERNEL_DIR/KernelSU && git revert 898e9d4f8ca9b2f46b0c6b36b80a872b5b88d899
+        cd $KERNEL_DIR/KernelSU && git revert 898e9d4f8ca9b2f46b0c6b36b80a872b5b88d899 && curl https://github.com/selfmusing/USlenreK/commit/d0942b5efc16cbd0d179113b5f982e3b6e3b9f25.patch | git am
         msg "Readding support for Non GKI kernels..."
 
 	if [[ $KSU_MANAGER == "true" ]]; then
@@ -114,8 +102,8 @@ elif
 
     if [[ ! -z "$MANAGER_EXPECTED_SIZE" ]] && [[ ! -z "$MANAGER_EXPECTED_HASH" ]]; then
 	cd $KERNEL_DIR/KernelSU
-	sed -i '/return check_v2_signature(path, EXPECTED_SIZE, EXPECTED_HASH);/c\
-        \    return (check_v2_signature(path, EXPECTED_SIZE, EXPECTED_HASH) || check_v2_signature(path, '"$MANAGER_EXPECTED_SIZE"', "'"$MANAGER_EXPECTED_HASH"'"));' kernel/apk_sign.c
+	sed -i "s/^KSU_EXPECTED_SIZE := .*/KSU_EXPECTED_SIZE := $MANAGER_EXPECTED_SIZE/" kernel/Makefile
+	sed -i "s/^KSU_EXPECTED_HASH := .*/KSU_EXPECTED_HASH := $MANAGER_EXPECTED_HASH/" kernel/Makefile
 	msg "KSU_EXPECTED_SIZE := $MANAGER_EXPECTED_SIZE"
         msg "KSU_EXPECTED_HASH := $MANAGER_EXPECTED_HASH" && cd $WORKDIR
     fi
@@ -133,6 +121,7 @@ elif
     cp $WORKDIR/patches/KernelSU/SuSFS/$KERNEL_VER/susfs.h $KERNEL_DIR/include/linux/
     cp $WORKDIR/patches/KernelSU/SuSFS/$KERNEL_VER/sus_su.c $KERNEL_DIR/fs/
     cp $WORKDIR/patches/KernelSU/SuSFS/$KERNEL_VER/sus_su.h $KERNEL_DIR/include/linux/
+    cp $WORKDIR/patches/KernelSU/SuSFS/$KERNEL_VER/susfs_def.h $KERNEL_DIR/include/linux/
     cd $KERNEL_DIR && patch -p1 -F 3 < add_susfs_in_kernel-$KERNEL_VER.patch
     msg "Importing SuSFS into $KERNEL_VER kernel..."
 
@@ -151,7 +140,7 @@ elif
 
     KSU_GIT_VERSION=$(cd KernelSU && git rev-list --count HEAD)
     KERNELSU_VERSION=$(($KSU_GIT_VERSION + 10200))
-    SUSFS_VERSION=$(grep "SuSFS version:" $WORKDIR/patches/KernelSU/SuSFS/$KERNEL_VER/add_susfs_in_kernel-$KERNEL_VER.patch | cut -d' ' -f3)
+    SUSFS_VERSION=$(grep "SUSFS_VERSION" $WORKDIR/patches/KernelSU/SuSFS/$KERNEL_VER/susfs.h | cut -d '"' -f2 )
     msg "KernelSU Version: $KERNELSU_VERSION"
     msg "SuSFS version: $SUSFS_VERSION"
     sed -i "s/^CONFIG_LOCALVERSION=.*/CONFIG_LOCALVERSION=\"-$KERNEL_BRANCH-$KERNEL_NAME-κsu\"/" $DEVICE_DEFCONFIG_FILE
