@@ -340,7 +340,7 @@ index bed501c4..e02aa514 100644
  
  #endif
 diff --git a/kernel/core_hook.c b/kernel/core_hook.c
-index 296c3c9c..f8a86f76 100644
+index 296c3c9c..3deeaef9 100644
 --- a/kernel/core_hook.c
 +++ b/kernel/core_hook.c
 @@ -18,6 +18,10 @@
@@ -791,7 +791,7 @@ index 296c3c9c..f8a86f76 100644
  	// all other cmds are for 'root manager'
  	if (!from_manager) {
  		return 0;
-@@ -490,11 +838,15 @@ static bool should_umount(struct path *path)
+@@ -490,24 +838,30 @@ static bool should_umount(struct path *path)
  		return false;
  	}
  
@@ -806,9 +806,19 @@ index 296c3c9c..f8a86f76 100644
 +#endif
  }
  
- static int ksu_umount_mnt(struct path *path, int flags)
-@@ -507,7 +859,11 @@ static int ksu_umount_mnt(struct path *path, int flags)
- #endif
+-static int ksu_umount_mnt(struct path *path, int flags)
++static void ksu_umount_mnt(struct path *path, int flags)
+ {
+-#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 9, 0) || defined(KSU_UMOUNT)
+-	return path_umount(path, flags);
+-#else
+-	// TODO: umount for non GKI kernel
+-	return -ENOSYS;
+-#endif
++int err = path_umount(path, flags);
++	if (err) {
++		pr_info("umount %s failed: %d\n", path->dentry->d_iname, err);
++	}
  }
  
 -static void try_umount(const char *mnt, bool check_mnt, int flags)
@@ -820,20 +830,20 @@ index 296c3c9c..f8a86f76 100644
  {
  	struct path path;
  	int err = kern_path(mnt, 0, &path);
-@@ -525,12 +881,35 @@ static void try_umount(const char *mnt, bool check_mnt, int flags)
+@@ -525,12 +879,32 @@ static void try_umount(const char *mnt, bool check_mnt, int flags)
  		return;
  	}
  
+-	err = ksu_umount_mnt(&path, flags);
+-	if (err) {
+-		pr_warn("umount %s failed: %d\n", mnt, err);
 +#if defined(CONFIG_KSU_SUSFS_TRY_UMOUNT) && defined(CONFIG_KSU_SUSFS_ENABLE_LOG)
 +	if (susfs_is_log_enabled) {
 +		pr_info("susfs: umounting '%s' for uid: %d\n", mnt, uid);
-+	}
+ 	}
 +#endif
 +
- 	err = ksu_umount_mnt(&path, flags);
- 	if (err) {
- 		pr_warn("umount %s failed: %d\n", mnt, err);
- 	}
++	ksu_umount_mnt(&path, flags);
  }
  
 +#ifdef CONFIG_KSU_SUSFS_TRY_UMOUNT
@@ -856,7 +866,7 @@ index 296c3c9c..f8a86f76 100644
  int ksu_handle_setuid(struct cred *new, const struct cred *old)
  {
  	// this hook is used for umounting overlayfs for some uid, if there isn't any module mounted, just ignore it!
-@@ -550,6 +929,20 @@ int ksu_handle_setuid(struct cred *new, const struct cred *old)
+@@ -550,6 +924,20 @@ int ksu_handle_setuid(struct cred *new, const struct cred *old)
  		return 0;
  	}
  
@@ -877,7 +887,7 @@ index 296c3c9c..f8a86f76 100644
  	if (!is_appuid(new_uid) || is_unsupported_uid(new_uid.val)) {
  		// pr_info("handle setuid ignore non application or isolated uid: %d\n", new_uid.val);
  		return 0;
-@@ -559,7 +952,17 @@ int ksu_handle_setuid(struct cred *new, const struct cred *old)
+@@ -559,7 +947,17 @@ int ksu_handle_setuid(struct cred *new, const struct cred *old)
  		// pr_info("handle setuid ignore allowed application: %d\n", new_uid.val);
  		return 0;
  	}
@@ -895,7 +905,7 @@ index 296c3c9c..f8a86f76 100644
  	if (!ksu_uid_should_umount(new_uid.val)) {
  		return 0;
  	} else {
-@@ -568,10 +971,12 @@ int ksu_handle_setuid(struct cred *new, const struct cred *old)
+@@ -568,10 +966,12 @@ int ksu_handle_setuid(struct cred *new, const struct cred *old)
  #endif
  	}
  
@@ -909,7 +919,7 @@ index 296c3c9c..f8a86f76 100644
  	if (!is_zygote_child) {
  		pr_info("handle umount ignore non zygote child: %d\n",
  			current->pid);
-@@ -583,17 +988,27 @@ int ksu_handle_setuid(struct cred *new, const struct cred *old)
+@@ -583,17 +983,27 @@ int ksu_handle_setuid(struct cred *new, const struct cred *old)
  		current->pid);
  #endif
  
@@ -944,7 +954,7 @@ index 296c3c9c..f8a86f76 100644
  	return 0;
  }
  
-@@ -604,7 +1019,7 @@ static int ksu_task_prctl(int option, unsigned long arg2, unsigned long arg3,
+@@ -604,7 +1014,7 @@ static int ksu_task_prctl(int option, unsigned long arg2, unsigned long arg3,
  	return -ENOSYS;
  }
  // kernel 4.4 and 4.9
@@ -953,7 +963,7 @@ index 296c3c9c..f8a86f76 100644
  static int ksu_key_permission(key_ref_t key_ref, const struct cred *cred,
  			      unsigned perm)
  {
-@@ -636,7 +1051,7 @@ static struct security_hook_list ksu_hooks[] = {
+@@ -636,7 +1046,7 @@ static struct security_hook_list ksu_hooks[] = {
  	LSM_HOOK_INIT(task_prctl, ksu_task_prctl),
  	LSM_HOOK_INIT(inode_rename, ksu_inode_rename),
  	LSM_HOOK_INIT(task_fix_setuid, ksu_task_fix_setuid),
