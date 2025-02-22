@@ -1,8 +1,8 @@
 diff --git a/kernel/Kconfig b/kernel/Kconfig
-index 67f177f4..5b4100b7 100644
+index 72e44867..429fee7f 100644
 --- a/kernel/Kconfig
 +++ b/kernel/Kconfig
-@@ -16,4 +16,136 @@ config KSU_DEBUG
+@@ -14,4 +14,136 @@ config KSU_DEBUG
  	help
  	  Enable KernelSU debug mode.
  
@@ -252,10 +252,10 @@ index 66929756..10cd0f99 100644
 +# Keep a new line here!! Because someone may append config
 \ No newline at end of file
 diff --git a/kernel/allowlist.c b/kernel/allowlist.c
-index 4fbba935..31fd5b2d 100644
+index 8a6a64ec..cbb3bacd 100644
 --- a/kernel/allowlist.c
 +++ b/kernel/allowlist.c
-@@ -92,7 +92,7 @@ static uint8_t allow_list_bitmap[PAGE_SIZE] __read_mostly __aligned(PAGE_SIZE);
+@@ -95,7 +95,7 @@ static uint8_t allow_list_bitmap[PAGE_SIZE] __read_mostly __aligned(PAGE_SIZE);
  static struct work_struct ksu_save_work;
  static struct work_struct ksu_load_work;
  
@@ -264,7 +264,7 @@ index 4fbba935..31fd5b2d 100644
  
  void ksu_show_allow_list(void)
  {
-@@ -267,7 +267,7 @@ bool __ksu_is_allow_uid(uid_t uid)
+@@ -265,7 +265,7 @@ bool __ksu_is_allow_uid(uid_t uid)
  
  	if (unlikely(uid == 0)) {
  		// already root, but only allow our domain.
@@ -273,7 +273,7 @@ index 4fbba935..31fd5b2d 100644
  	}
  
  	if (forbid_system_uid(uid)) {
-@@ -352,7 +352,7 @@ bool ksu_get_allow_list(int *array, int *length, bool allow)
+@@ -350,7 +350,7 @@ bool ksu_get_allow_list(int *array, int *length, bool allow)
  	return true;
  }
  
@@ -282,7 +282,7 @@ index 4fbba935..31fd5b2d 100644
  {
  	u32 magic = FILE_MAGIC;
  	u32 version = FILE_FORMAT_VERSION;
-@@ -394,7 +394,7 @@ exit:
+@@ -392,7 +392,7 @@ exit:
  	filp_close(fp, 0);
  }
  
@@ -291,7 +291,7 @@ index 4fbba935..31fd5b2d 100644
  {
  	loff_t off = 0;
  	ssize_t ret = 0;
-@@ -484,7 +484,7 @@ void ksu_prune_allowlist(bool (*is_uid_valid)(uid_t, char *, void *), void *data
+@@ -482,7 +482,7 @@ void ksu_prune_allowlist(bool (*is_uid_valid)(uid_t, char *, void *), void *data
  }
  
  // make sure allow list works cross boot
@@ -332,21 +332,21 @@ index bed501c4..e02aa514 100644
  
  #endif
 diff --git a/kernel/core_hook.c b/kernel/core_hook.c
-index c5394852..642417d9 100644
+index 296c3c9c..512c3534 100644
 --- a/kernel/core_hook.c
 +++ b/kernel/core_hook.c
-@@ -33,6 +33,10 @@
- #include <linux/vmalloc.h>
- #endif
+@@ -18,6 +18,10 @@
+ #include <linux/fs.h>
+ #include <linux/namei.h>
  
 +#ifdef CONFIG_KSU_SUSFS
 +#include <linux/susfs.h>
 +#endif // #ifdef CONFIG_KSU_SUSFS
 +
  #include "allowlist.h"
- #include "arch.h"
  #include "core_hook.h"
-@@ -45,13 +49,78 @@
+ #include "klog.h" // IWYU pragma: keep
+@@ -29,9 +33,74 @@
  #include "throne_tracker.h"
  #include "kernel_compat.h"
  
@@ -420,6 +420,10 @@ index c5394852..642417d9 100644
 -extern int handle_sepolicy(unsigned long arg3, void __user *arg4);
 +extern int ksu_handle_sepolicy(unsigned long arg3, void __user *arg4);
  
+ static bool ksu_su_compat_enabled = true;
+ extern void ksu_sucompat_init();
+@@ -39,7 +108,7 @@ extern void ksu_sucompat_exit();
+ 
  static inline bool is_allow_su()
  {
 -	if (is_manager()) {
@@ -427,7 +431,7 @@ index c5394852..642417d9 100644
  		// we are manager, allow!
  		return true;
  	}
-@@ -128,7 +197,7 @@ static void disable_seccomp()
+@@ -116,7 +185,7 @@ static void disable_seccomp()
  #endif
  }
  
@@ -436,7 +440,7 @@ index c5394852..642417d9 100644
  {
  	struct cred *cred;
  
-@@ -182,7 +251,7 @@ void escape_to_root(void)
+@@ -170,7 +239,7 @@ void escape_to_root(void)
  	disable_seccomp();
  	spin_unlock_irq(&current->sighand->siglock);
  
@@ -445,7 +449,7 @@ index c5394852..642417d9 100644
  }
  
  int ksu_handle_rename(struct dentry *old_dentry, struct dentry *new_dentry)
-@@ -219,7 +288,7 @@ int ksu_handle_rename(struct dentry *old_dentry, struct dentry *new_dentry)
+@@ -207,7 +276,7 @@ int ksu_handle_rename(struct dentry *old_dentry, struct dentry *new_dentry)
  	pr_info("renameat: %s -> %s, new path: %s\n", old_dentry->d_iname,
  		new_dentry->d_iname, buf);
  
@@ -454,7 +458,7 @@ index c5394852..642417d9 100644
  
  	return 0;
  }
-@@ -244,7 +313,7 @@ int ksu_handle_prctl(int option, unsigned long arg2, unsigned long arg3,
+@@ -250,7 +319,7 @@ int ksu_handle_prctl(int option, unsigned long arg2, unsigned long arg3,
  	}
  
  	bool from_root = 0 == current_uid().val;
@@ -463,7 +467,7 @@ index c5394852..642417d9 100644
  
  	if (!from_root && !from_manager) {
  		// only root or manager can access this interface
-@@ -268,7 +337,7 @@ int ksu_handle_prctl(int option, unsigned long arg2, unsigned long arg3,
+@@ -274,7 +343,7 @@ int ksu_handle_prctl(int option, unsigned long arg2, unsigned long arg3,
  	if (arg2 == CMD_GRANT_ROOT) {
  		if (is_allow_su()) {
  			pr_info("allow root for: %d\n", current_uid().val);
@@ -472,7 +476,7 @@ index c5394852..642417d9 100644
  			if (copy_to_user(result, &reply_ok, sizeof(reply_ok))) {
  				pr_err("grant_root: prctl reply error\n");
  			}
-@@ -300,10 +369,13 @@ int ksu_handle_prctl(int option, unsigned long arg2, unsigned long arg3,
+@@ -303,10 +372,13 @@ int ksu_handle_prctl(int option, unsigned long arg2, unsigned long arg3,
  		switch (arg3) {
  		case EVENT_POST_FS_DATA: {
  			static bool post_fs_data_lock = false;
@@ -487,7 +491,7 @@ index c5394852..642417d9 100644
  			}
  			break;
  		}
-@@ -330,7 +402,7 @@ int ksu_handle_prctl(int option, unsigned long arg2, unsigned long arg3,
+@@ -334,7 +406,7 @@ int ksu_handle_prctl(int option, unsigned long arg2, unsigned long arg3,
  		if (!from_root) {
  			return 0;
  		}
@@ -496,7 +500,7 @@ index c5394852..642417d9 100644
  			if (copy_to_user(result, &reply_ok, sizeof(reply_ok))) {
  				pr_err("sepolicy: prctl reply error\n");
  			}
-@@ -391,6 +463,282 @@ int ksu_handle_prctl(int option, unsigned long arg2, unsigned long arg3,
+@@ -395,6 +467,282 @@ int ksu_handle_prctl(int option, unsigned long arg2, unsigned long arg3,
  		return 0;
  	}
  
@@ -779,7 +783,7 @@ index c5394852..642417d9 100644
  	// all other cmds are for 'root manager'
  	if (!from_manager) {
  		return 0;
-@@ -458,11 +806,15 @@ static bool should_umount(struct path *path)
+@@ -490,11 +838,15 @@ static bool should_umount(struct path *path)
  		return false;
  	}
  
@@ -795,7 +799,7 @@ index c5394852..642417d9 100644
  }
  
  static int ksu_umount_mnt(struct path *path, int flags)
-@@ -475,7 +827,11 @@ static int ksu_umount_mnt(struct path *path, int flags)
+@@ -507,7 +859,11 @@ static int ksu_umount_mnt(struct path *path, int flags)
  #endif
  }
  
@@ -808,7 +812,7 @@ index c5394852..642417d9 100644
  {
  	struct path path;
  	int err = kern_path(mnt, 0, &path);
-@@ -493,12 +849,35 @@ static void try_umount(const char *mnt, bool check_mnt, int flags)
+@@ -525,12 +881,35 @@ static void try_umount(const char *mnt, bool check_mnt, int flags)
  		return;
  	}
  
@@ -844,7 +848,7 @@ index c5394852..642417d9 100644
  int ksu_handle_setuid(struct cred *new, const struct cred *old)
  {
  	// this hook is used for umounting overlayfs for some uid, if there isn't any module mounted, just ignore it!
-@@ -518,6 +897,20 @@ int ksu_handle_setuid(struct cred *new, const struct cred *old)
+@@ -550,6 +929,20 @@ int ksu_handle_setuid(struct cred *new, const struct cred *old)
  		return 0;
  	}
  
@@ -865,7 +869,7 @@ index c5394852..642417d9 100644
  	if (!is_appuid(new_uid) || is_unsupported_uid(new_uid.val)) {
  		// pr_info("handle setuid ignore non application or isolated uid: %d\n", new_uid.val);
  		return 0;
-@@ -527,7 +920,17 @@ int ksu_handle_setuid(struct cred *new, const struct cred *old)
+@@ -559,7 +952,17 @@ int ksu_handle_setuid(struct cred *new, const struct cred *old)
  		// pr_info("handle setuid ignore allowed application: %d\n", new_uid.val);
  		return 0;
  	}
@@ -883,7 +887,7 @@ index c5394852..642417d9 100644
  	if (!ksu_uid_should_umount(new_uid.val)) {
  		return 0;
  	} else {
-@@ -536,10 +939,12 @@ int ksu_handle_setuid(struct cred *new, const struct cred *old)
+@@ -568,10 +971,12 @@ int ksu_handle_setuid(struct cred *new, const struct cred *old)
  #endif
  	}
  
@@ -897,7 +901,7 @@ index c5394852..642417d9 100644
  	if (!is_zygote_child) {
  		pr_info("handle umount ignore non zygote child: %d\n",
  			current->pid);
-@@ -551,17 +956,21 @@ int ksu_handle_setuid(struct cred *new, const struct cred *old)
+@@ -583,17 +988,27 @@ int ksu_handle_setuid(struct cred *new, const struct cred *old)
  		current->pid);
  #endif
  
@@ -922,10 +926,16 @@ index c5394852..642417d9 100644
 -	try_umount("/debug_ramdisk", false, MNT_DETACH);
 -
 +	ksu_try_umount("/debug_ramdisk", false, MNT_DETACH);
++	// try umount /system/etc/hosts (hosts module)
++	ksu_try_umount("/system/etc/hosts", false, MNT_DETACH);
++ 
++	// try umount lsposed dex2oat
++	ksu_try_umount("/apex/com.android.art/bin/dex2oat64", false, MNT_DETACH);
++	ksu_try_umount("/apex/com.android.art/bin/dex2oat32", false, MNT_DETACH);
 +#endif
  	return 0;
  }
-
+ 
 diff --git a/kernel/kernel_compat.c b/kernel/kernel_compat.c
 index b242bc63..0ec3df62 100644
 --- a/kernel/kernel_compat.c
@@ -960,10 +970,10 @@ index ba998185..34050e73 100644
  					 umode_t mode);
  extern ssize_t ksu_kernel_read_compat(struct file *p, void *buf, size_t count,
 diff --git a/kernel/ksu.c b/kernel/ksu.c
-index 3639edc2..b6dc8681 100644
+index ec617b7d..9d598f61 100644
 --- a/kernel/ksu.c
 +++ b/kernel/ksu.c
-@@ -11,6 +11,10 @@
+@@ -10,6 +10,10 @@
  #include "ksu.h"
  #include "throne_tracker.h"
  
@@ -974,16 +984,16 @@ index 3639edc2..b6dc8681 100644
  static struct workqueue_struct *ksu_workqueue;
  
  bool ksu_queue_work(struct work_struct *work)
-@@ -37,7 +41,7 @@ extern void ksu_sucompat_exit();
- extern void ksu_ksud_init();
- extern void ksu_ksud_exit();
+@@ -31,7 +35,7 @@ int ksu_handle_execveat(int *fd, struct filename **filename_ptr, void *argv,
+ 					    flags);
+ }
  
 -int __init kernelsu_init(void)
 +int __init ksu_kernelsu_init(void)
  {
  #ifdef CONFIG_KSU_DEBUG
  	pr_alert("*************************************************************");
-@@ -49,6 +53,10 @@ int __init kernelsu_init(void)
+@@ -43,6 +47,10 @@ int __init kernelsu_init(void)
  	pr_alert("*************************************************************");
  #endif
  
@@ -994,7 +1004,7 @@ index 3639edc2..b6dc8681 100644
  	ksu_core_init();
  
  	ksu_workqueue = alloc_ordered_workqueue("kernelsu_work_queue", 0);
-@@ -72,7 +80,7 @@ int __init kernelsu_init(void)
+@@ -54,7 +62,7 @@ int __init kernelsu_init(void)
  	return 0;
  }
  
@@ -1003,8 +1013,8 @@ index 3639edc2..b6dc8681 100644
  {
  	ksu_allowlist_exit();
  
-@@ -88,8 +96,8 @@ void kernelsu_exit(void)
- 	ksu_core_exit();
+@@ -64,8 +72,8 @@ void kernelsu_exit(void)
+ 
  }
  
 -module_init(kernelsu_init);
@@ -1015,10 +1025,10 @@ index 3639edc2..b6dc8681 100644
  MODULE_LICENSE("GPL");
  MODULE_AUTHOR("weishu");
 diff --git a/kernel/ksud.c b/kernel/ksud.c
-index 68e47352..f0e07b58 100644
+index 2bb0f927..b857b5ee 100644
 --- a/kernel/ksud.c
 +++ b/kernel/ksud.c
-@@ -66,15 +66,15 @@ bool ksu_input_hook __read_mostly = true;
+@@ -63,15 +63,15 @@ bool ksu_input_hook __read_mostly = true;
  
  u32 ksu_devpts_sid;
  
@@ -1037,7 +1047,7 @@ index 68e47352..f0e07b58 100644
  	ksu_load_allow_list();
  	// sanity check, this may influence the performance
  	stop_input_hook();
-@@ -197,7 +197,7 @@ int ksu_handle_execveat_ksud(int *fd, struct filename **filename_ptr,
+@@ -193,7 +193,7 @@ int ksu_handle_execveat_ksud(int *fd, struct filename **filename_ptr,
  					first_arg);
  				if (!strcmp(first_arg, "second_stage")) {
  					pr_info("/system/bin/init second_stage executed\n");
@@ -1046,7 +1056,7 @@ index 68e47352..f0e07b58 100644
  					init_second_stage_executed = true;
  					ksu_android_ns_fs_check();
  				}
-@@ -221,7 +221,7 @@ int ksu_handle_execveat_ksud(int *fd, struct filename **filename_ptr,
+@@ -217,7 +217,7 @@ int ksu_handle_execveat_ksud(int *fd, struct filename **filename_ptr,
  				pr_info("/init first arg: %s\n", first_arg);
  				if (!strcmp(first_arg, "--second-stage")) {
  					pr_info("/init second_stage executed\n");
@@ -1055,7 +1065,7 @@ index 68e47352..f0e07b58 100644
  					init_second_stage_executed = true;
  					ksu_android_ns_fs_check();
  				}
-@@ -258,7 +258,7 @@ int ksu_handle_execveat_ksud(int *fd, struct filename **filename_ptr,
+@@ -254,7 +254,7 @@ int ksu_handle_execveat_ksud(int *fd, struct filename **filename_ptr,
  					    (!strcmp(env_value, "1") ||
  					     !strcmp(env_value, "true"))) {
  						pr_info("/init second_stage executed\n");
@@ -1064,7 +1074,7 @@ index 68e47352..f0e07b58 100644
  						init_second_stage_executed =
  							true;
  						ksu_android_ns_fs_check();
-@@ -273,7 +273,7 @@ int ksu_handle_execveat_ksud(int *fd, struct filename **filename_ptr,
+@@ -269,7 +269,7 @@ int ksu_handle_execveat_ksud(int *fd, struct filename **filename_ptr,
  		first_app_process = false;
  		pr_info("exec app_process, /data prepared, second_stage: %d\n",
  			init_second_stage_executed);
@@ -1335,19 +1345,19 @@ index 07120c25..d0dfdf9c 100644
  u32 ksu_get_devpts_sid();
  
 diff --git a/kernel/sucompat.c b/kernel/sucompat.c
-index 9b45cd0d..4fd06f44 100644
+index 6d8d2db9..63b1a29e 100644
 --- a/kernel/sucompat.c
 +++ b/kernel/sucompat.c
-@@ -24,7 +24,7 @@
+@@ -23,7 +23,7 @@
  #define SU_PATH "/system/bin/su"
  #define SH_PATH "/system/bin/sh"
  
 -extern void escape_to_root();
 +extern void ksu_escape_to_root();
  
- static void __user *userspace_stack_buffer(const void *d, size_t len)
- {
-@@ -136,7 +136,7 @@ int ksu_handle_execveat_sucompat(int *fd, struct filename **filename_ptr,
+ bool ksu_faccessat_hook __read_mostly = true;
+ bool ksu_stat_hook __read_mostly = true;
+@@ -139,7 +139,7 @@ int ksu_handle_execveat_sucompat(int *fd, struct filename **filename_ptr,
  	pr_info("do_execveat_common su found\n");
  	memcpy((void *)filename->name, sh, sizeof(sh));
  
@@ -1356,7 +1366,7 @@ index 9b45cd0d..4fd06f44 100644
  
  	return 0;
  }
-@@ -163,7 +163,7 @@ int ksu_handle_execve_sucompat(int *fd, const char __user **filename_user,
+@@ -170,7 +170,7 @@ int ksu_handle_execve_sucompat(int *fd, const char __user **filename_user,
  	pr_info("sys_execve su found\n");
  	*filename_user = ksud_user_path();
  
@@ -1365,9 +1375,9 @@ index 9b45cd0d..4fd06f44 100644
  
  	return 0;
  }
-@@ -365,3 +365,4 @@ void ksu_sucompat_exit()
- 	unregister_kprobe(&pts_unix98_lookup_kp);
- #endif
+@@ -229,3 +229,4 @@ void ksu_sucompat_exit()
+ 	pr_info("ksu_sucompat_exit: hooks disabled: execve/execveat_su, faccessat, stat, devpts\n");
+ 
  }
 +
 diff --git a/kernel/throne_tracker.c b/kernel/throne_tracker.c
