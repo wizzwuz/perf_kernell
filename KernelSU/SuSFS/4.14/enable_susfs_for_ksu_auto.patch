@@ -1,11 +1,19 @@
 diff --git a/kernel/Kconfig b/kernel/Kconfig
-index 72e44867..429fee7f 100644
+index 72e44867..4ea2de90 100644
 --- a/kernel/Kconfig
 +++ b/kernel/Kconfig
-@@ -14,4 +14,136 @@ config KSU_DEBUG
+@@ -14,4 +14,144 @@ config KSU_DEBUG
  	help
  	  Enable KernelSU debug mode.
  
++config KSU_ALLOWLIST_WORKAROUND
++        bool "KernelSU Session Keyring Init workaround"
++        depends on KSU
++        default n
++        help
++          Enable session keyring init workaround for problematic devices.
++          Useful for situations where the SU allowlist is not kept after a reboot.
++
 +menu "KernelSU - SUSFS"
 +config KSU_SUSFS
 +    bool "KernelSU addon - SUSFS"
@@ -332,7 +340,7 @@ index bed501c4..e02aa514 100644
  
  #endif
 diff --git a/kernel/core_hook.c b/kernel/core_hook.c
-index 296c3c9c..512c3534 100644
+index 296c3c9c..f8a86f76 100644
 --- a/kernel/core_hook.c
 +++ b/kernel/core_hook.c
 @@ -18,6 +18,10 @@
@@ -936,11 +944,38 @@ index 296c3c9c..512c3534 100644
  	return 0;
  }
  
+@@ -604,7 +1019,7 @@ static int ksu_task_prctl(int option, unsigned long arg2, unsigned long arg3,
+ 	return -ENOSYS;
+ }
+ // kernel 4.4 and 4.9
+-#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 10, 0) || defined(CONFIG_IS_HW_HISI)
++#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 10, 0) || defined(CONFIG_IS_HW_HISI) || defined(CONFIG_KSU_ALLOWLIST_WORKAROUND)
+ static int ksu_key_permission(key_ref_t key_ref, const struct cred *cred,
+ 			      unsigned perm)
+ {
+@@ -636,7 +1051,7 @@ static struct security_hook_list ksu_hooks[] = {
+ 	LSM_HOOK_INIT(task_prctl, ksu_task_prctl),
+ 	LSM_HOOK_INIT(inode_rename, ksu_inode_rename),
+ 	LSM_HOOK_INIT(task_fix_setuid, ksu_task_fix_setuid),
+-#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 10, 0) || defined(CONFIG_IS_HW_HISI)
++#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 10, 0) || defined(CONFIG_IS_HW_HISI) || defined(CONFIG_KSU_ALLOWLIST_WORKAROUND)
+ 	LSM_HOOK_INIT(key_permission, ksu_key_permission)
+ #endif
+ };
 diff --git a/kernel/kernel_compat.c b/kernel/kernel_compat.c
-index b242bc63..0ec3df62 100644
+index b242bc63..ed47cb96 100644
 --- a/kernel/kernel_compat.c
 +++ b/kernel/kernel_compat.c
-@@ -77,6 +77,16 @@ void ksu_android_ns_fs_check()
+@@ -10,7 +10,7 @@
+ #include "klog.h" // IWYU pragma: keep
+ #include "kernel_compat.h" // Add check Huawei Device
+ 
+-#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 10, 0) || defined(CONFIG_IS_HW_HISI)
++#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 10, 0) || defined(CONFIG_IS_HW_HISI) || defined(CONFIG_KSU_ALLOWLIST_WORKAROUND)
+ #include <linux/key.h>
+ #include <linux/errno.h>
+ #include <linux/cred.h>
+@@ -77,9 +77,19 @@ void ksu_android_ns_fs_check()
  	task_unlock(current);
  }
  
@@ -956,12 +991,22 @@ index b242bc63..0ec3df62 100644
 +
  struct file *ksu_filp_open_compat(const char *filename, int flags, umode_t mode)
  {
- #if LINUX_VERSION_CODE < KERNEL_VERSION(4, 10, 0) || defined(CONFIG_IS_HW_HISI)
+-#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 10, 0) || defined(CONFIG_IS_HW_HISI)
++#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 10, 0) || defined(CONFIG_IS_HW_HISI) || defined(CONFIG_KSU_ALLOWLIST_WORKAROUND)
+ 	if (init_session_keyring != NULL && !current_cred()->session_keyring &&
+ 	    (current->flags & PF_WQ_WORKER)) {
+ 		pr_info("installing init session keyring for older kernel\n");
 diff --git a/kernel/kernel_compat.h b/kernel/kernel_compat.h
-index ba998185..34050e73 100644
+index ba998185..b0d664a9 100644
 --- a/kernel/kernel_compat.h
 +++ b/kernel/kernel_compat.h
-@@ -29,6 +29,7 @@ extern struct key *init_session_keyring;
+@@ -24,11 +24,12 @@ extern long ksu_strncpy_from_user_nofault(char *dst,
+ 					  const void __user *unsafe_addr,
+ 					  long count);
+ 
+-#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 10, 0) || defined(CONFIG_IS_HW_HISI)
++#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 10, 0) || defined(CONFIG_IS_HW_HISI) || defined(CONFIG_KSU_ALLOWLIST_WORKAROUND)
+ extern struct key *init_session_keyring;
  #endif
  
  extern void ksu_android_ns_fs_check();
