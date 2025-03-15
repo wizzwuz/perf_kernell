@@ -86,7 +86,7 @@ elif
             msg "Backporting path_umount from 5.10.9..."
         fi
 
-        cd $KERNEL_DIR/KernelSU && git fetch https://github.com/selfmusing/USlenreK tiann && git cherry-pick 3fb07af acb6908 4bf0028 78e4d39
+        cd $KERNEL_DIR/KernelSU && git fetch https://github.com/selfmusing/USlenreK ksu && git cherry-pick FETCH_HEAD~3^..FETCH_HEAD
         msg "Readding support for Non GKI kernels..."
 
 	if [[ $KSU_MANAGER == "true" ]]; then
