@@ -1,5 +1,5 @@
 diff --git a/kernel/Kconfig b/kernel/Kconfig
-index 72e44867..140481ed 100644
+index 72e448674bf0..140481ed5f9a 100644
 --- a/kernel/Kconfig
 +++ b/kernel/Kconfig
 @@ -13,5 +13,153 @@ config KSU_DEBUG
@@ -157,7 +157,7 @@ index 72e44867..140481ed 100644
  
  endmenu
 diff --git a/kernel/Makefile b/kernel/Makefile
-index 66929756..10cd0f99 100644
+index 669297563b1d..10cd0f9968c5 100644
 --- a/kernel/Makefile
 +++ b/kernel/Makefile
 @@ -29,14 +29,6 @@ $(warning "KSU_GIT_VERSION not defined! It is better to make KernelSU a git subm
@@ -269,7 +269,7 @@ index 66929756..10cd0f99 100644
 +# Keep a new line here!! Because someone may append config
 \ No newline at end of file
 diff --git a/kernel/allowlist.c b/kernel/allowlist.c
-index bcdac3f0..6f2557c9 100644
+index bcdac3f0ae1e..6f2557c9704e 100644
 --- a/kernel/allowlist.c
 +++ b/kernel/allowlist.c
 @@ -95,7 +95,7 @@ static uint8_t allow_list_bitmap[PAGE_SIZE] __read_mostly __aligned(PAGE_SIZE);
@@ -299,7 +299,7 @@ index bcdac3f0..6f2557c9 100644
  {
  	u32 magic = FILE_MAGIC;
  	u32 version = FILE_FORMAT_VERSION;
-@@ -393,7 +393,7 @@ exit:
+@@ -393,7 +393,7 @@ void do_save_allow_list(struct work_struct *work)
  	filp_close(fp, 0);
  }
  
@@ -318,7 +318,7 @@ index bcdac3f0..6f2557c9 100644
  	return ksu_queue_work(&ksu_save_work);
  }
 diff --git a/kernel/apk_sign.c b/kernel/apk_sign.c
-index ba8b73f2..9af28285 100644
+index ba8b73f2eb2b..9af2828597b6 100644
 --- a/kernel/apk_sign.c
 +++ b/kernel/apk_sign.c
 @@ -314,7 +314,12 @@ module_param_cb(ksu_debug_manager_uid, &expected_size_ops,
@@ -337,7 +337,7 @@ index ba8b73f2..9af28285 100644
  }
 \ No newline at end of file
 diff --git a/kernel/apk_sign.h b/kernel/apk_sign.h
-index bed501c4..e02aa514 100644
+index bed501c49264..e02aa5144065 100644
 --- a/kernel/apk_sign.h
 +++ b/kernel/apk_sign.h
 @@ -3,6 +3,6 @@
@@ -349,7 +349,7 @@ index bed501c4..e02aa514 100644
  
  #endif
 diff --git a/kernel/core_hook.c b/kernel/core_hook.c
-index c0132b96..ab3a8d9c 100644
+index 105d74e1a362..bf1636ec5be6 100644
 --- a/kernel/core_hook.c
 +++ b/kernel/core_hook.c
 @@ -5,7 +5,11 @@
@@ -933,7 +933,7 @@ index c0132b96..ab3a8d9c 100644
  	if (!is_zygote_child) {
  		pr_info("handle umount ignore non zygote child: %d\n",
  			current->pid);
-@@ -592,29 +1004,33 @@ int ksu_handle_setuid(struct cred *new, const struct cred *old)
+@@ -592,30 +1004,34 @@ int ksu_handle_setuid(struct cred *new, const struct cred *old)
  		current->pid);
  #endif
  
@@ -943,11 +943,13 @@ index c0132b96..ab3a8d9c 100644
 +#else
  	// fixme: use `collect_mounts` and `iterate_mount` to iterate all mountpoint and
  	// filter the mountpoint whose target is `/data/adb`
+-	try_umount("/odm", true, 0);
 -	try_umount("/system", true, 0);
 -	try_umount("/vendor", true, 0);
 -	try_umount("/product", true, 0);
 -	try_umount("/system_ext", true, 0);
 -	try_umount("/data/adb/modules", false, MNT_DETACH);
++	ksu_try_umount("/odm", true, 0);
 +	ksu_try_umount("/system", true, 0);
 +	ksu_try_umount("/vendor", true, 0);
 +	ksu_try_umount("/product", true, 0);
@@ -983,7 +985,7 @@ index c0132b96..ab3a8d9c 100644
  			      unsigned perm)
  {
  	if (init_session_keyring != NULL) {
-@@ -629,6 +1045,15 @@ static int ksu_key_permission(key_ref_t key_ref, const struct cred *cred,
+@@ -630,6 +1046,15 @@ static int ksu_key_permission(key_ref_t key_ref, const struct cred *cred,
  	return 0;
  }
  #endif
@@ -999,7 +1001,7 @@ index c0132b96..ab3a8d9c 100644
  static int ksu_inode_rename(struct inode *old_inode, struct dentry *old_dentry,
  			    struct inode *new_inode, struct dentry *new_dentry)
  {
-@@ -645,7 +1070,7 @@ static struct security_hook_list ksu_hooks[] = {
+@@ -646,7 +1071,7 @@ static struct security_hook_list ksu_hooks[] = {
  	LSM_HOOK_INIT(task_prctl, ksu_task_prctl),
  	LSM_HOOK_INIT(inode_rename, ksu_inode_rename),
  	LSM_HOOK_INIT(task_fix_setuid, ksu_task_fix_setuid),
@@ -1008,7 +1010,7 @@ index c0132b96..ab3a8d9c 100644
  	LSM_HOOK_INIT(key_permission, ksu_key_permission)
  #endif
  };
-@@ -664,3 +1089,9 @@ void __init ksu_core_init(void)
+@@ -665,3 +1090,9 @@ void __init ksu_core_init(void)
  {
  	ksu_lsm_hook_init();
  }
@@ -1020,7 +1022,7 @@ index c0132b96..ab3a8d9c 100644
 + #endif //CONFIG_KSU_LSM_SECURITY_HOOKS
 \ No newline at end of file
 diff --git a/kernel/kernel_compat.c b/kernel/kernel_compat.c
-index 9458e2dd..7f21ed36 100644
+index 9458e2dd1e10..7f21ed368d73 100644
 --- a/kernel/kernel_compat.c
 +++ b/kernel/kernel_compat.c
 @@ -9,7 +9,7 @@
@@ -1054,7 +1056,7 @@ index 9458e2dd..7f21ed36 100644
  	    (current->flags & PF_WQ_WORKER)) {
  		pr_info("installing init session keyring for older kernel\n");
 diff --git a/kernel/kernel_compat.h b/kernel/kernel_compat.h
-index 19db96c0..f2c3c750 100644
+index 19db96c0dfb9..f2c3c7501dd5 100644
 --- a/kernel/kernel_compat.h
 +++ b/kernel/kernel_compat.h
 @@ -10,11 +10,12 @@ extern long ksu_strncpy_from_user_nofault(char *dst,
@@ -1072,7 +1074,7 @@ index 19db96c0..f2c3c750 100644
  					 umode_t mode);
  extern ssize_t ksu_kernel_read_compat(struct file *p, void *buf, size_t count,
 diff --git a/kernel/ksu.c b/kernel/ksu.c
-index 446063b7..1cb4f596 100644
+index 446063b7028d..1cb4f5962f01 100644
 --- a/kernel/ksu.c
 +++ b/kernel/ksu.c
 @@ -11,6 +11,10 @@
@@ -1127,7 +1129,7 @@ index 446063b7..1cb4f596 100644
  MODULE_LICENSE("GPL");
  MODULE_AUTHOR("weishu");
 diff --git a/kernel/ksud.c b/kernel/ksud.c
-index 45f79642..0164c128 100644
+index 45f7964201b2..0164c128314c 100644
 --- a/kernel/ksud.c
 +++ b/kernel/ksud.c
 @@ -63,15 +63,15 @@ bool ksu_input_hook __read_mostly = true;
@@ -1186,7 +1188,7 @@ index 45f79642..0164c128 100644
  	}
  
 diff --git a/kernel/ksud.h b/kernel/ksud.h
-index cc2df243..26974c9c 100644
+index cc2df243a8f0..26974c9c4fe5 100644
 --- a/kernel/ksud.h
 +++ b/kernel/ksud.h
 @@ -5,7 +5,7 @@
@@ -1199,7 +1201,7 @@ index cc2df243..26974c9c 100644
  bool ksu_is_safe_mode(void);
  
 diff --git a/kernel/manager.h b/kernel/manager.h
-index be5bbced..93fa2678 100644
+index be5bbced6f73..93fa26786a3a 100644
 --- a/kernel/manager.h
 +++ b/kernel/manager.h
 @@ -13,7 +13,7 @@ static inline bool ksu_is_manager_uid_valid()
@@ -1212,7 +1214,7 @@ index be5bbced..93fa2678 100644
  	return unlikely(ksu_manager_uid == current_uid().val);
  }
 diff --git a/kernel/selinux/rules.c b/kernel/selinux/rules.c
-index 1ba6d853..e4c65106 100644
+index 1ba6d853f2a9..e4c651068f92 100644
 --- a/kernel/selinux/rules.c
 +++ b/kernel/selinux/rules.c
 @@ -36,9 +36,9 @@ static struct policydb *get_policydb(void)
@@ -1259,7 +1261,7 @@ index 1ba6d853..e4c65106 100644
  	}
  
 diff --git a/kernel/selinux/selinux.c b/kernel/selinux/selinux.c
-index 4ba20b04..e171e010 100644
+index 4ba20b0435c2..e171e0109d29 100644
 --- a/kernel/selinux/selinux.c
 +++ b/kernel/selinux/selinux.c
 @@ -8,6 +8,14 @@
@@ -1407,7 +1409,7 @@ index 4ba20b04..e171e010 100644
  
  u32 ksu_get_devpts_sid()
 diff --git a/kernel/selinux/selinux.h b/kernel/selinux/selinux.h
-index 07120c25..d0dfdf9c 100644
+index 07120c253268..d0dfdf9c935b 100644
 --- a/kernel/selinux/selinux.h
 +++ b/kernel/selinux/selinux.h
 @@ -8,17 +8,29 @@
@@ -1447,7 +1449,7 @@ index 07120c25..d0dfdf9c 100644
  u32 ksu_get_devpts_sid();
  
 diff --git a/kernel/sucompat.c b/kernel/sucompat.c
-index 49f6ea7f..87d96da2 100644
+index 49f6ea7f0517..87d96da231ed 100644
 --- a/kernel/sucompat.c
 +++ b/kernel/sucompat.c
 @@ -23,7 +23,7 @@
@@ -1483,7 +1485,7 @@ index 49f6ea7f..87d96da2 100644
  }
 +
 diff --git a/kernel/throne_tracker.c b/kernel/throne_tracker.c
-index d4f26a25..9ff2a7d2 100644
+index f76f01b8dbe8..84af711f4139 100644
 --- a/kernel/throne_tracker.c
 +++ b/kernel/throne_tracker.c
 @@ -188,7 +188,7 @@ FILLDIR_RETURN_TYPE my_actor(struct dir_context *ctx, const char *name,
@@ -1505,7 +1507,7 @@ index d4f26a25..9ff2a7d2 100644
  	struct file *fp =
  		ksu_filp_open_compat(SYSTEM_PACKAGES_LIST_PATH, O_RDONLY, 0);
 diff --git a/kernel/throne_tracker.h b/kernel/throne_tracker.h
-index 5d7f4770..428c737d 100644
+index 5d7f477003ac..428c737dddc9 100644
 --- a/kernel/throne_tracker.h
 +++ b/kernel/throne_tracker.h
 @@ -5,6 +5,6 @@ void ksu_throne_tracker_init();
