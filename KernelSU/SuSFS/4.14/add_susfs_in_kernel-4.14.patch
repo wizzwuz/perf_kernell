@@ -1,5 +1,5 @@
 diff --git a/fs/Makefile b/fs/Makefile
-index 065a25d9b54b..64f3b07b13c6 100644
+index 065a25d9b..64f3b07b1 100644
 --- a/fs/Makefile
 +++ b/fs/Makefile
 @@ -14,6 +14,8 @@ obj-y :=	open.o read_write.o file_table.o super.o \
@@ -12,7 +12,7 @@ index 065a25d9b54b..64f3b07b13c6 100644
  obj-y +=	buffer.o block_dev.o direct-io.o mpage.o
  else
 diff --git a/fs/namei.c b/fs/namei.c
-index 80b743ccdd2b..6432d284a9cc 100644
+index 80b743ccd..6432d284a 100644
 --- a/fs/namei.c
 +++ b/fs/namei.c
 @@ -39,6 +39,9 @@
@@ -458,7 +458,7 @@ index 80b743ccdd2b..6432d284a9cc 100644
  	if (type != LAST_NORM)
  		goto exit1;
 diff --git a/fs/namespace.c b/fs/namespace.c
-index 6ca275c923c1..1bf2a4b5f4b9 100644
+index 6ca275c92..1bf2a4b5f 100644
 --- a/fs/namespace.c
 +++ b/fs/namespace.c
 @@ -27,10 +27,39 @@
@@ -893,7 +893,7 @@ index 6ca275c923c1..1bf2a4b5f4b9 100644
 +}
 +#endif
 diff --git a/fs/notify/fdinfo.c b/fs/notify/fdinfo.c
-index c62a87ee3b00..62e084ec0c6d 100644
+index c62a87ee3..62e084ec0 100644
 --- a/fs/notify/fdinfo.c
 +++ b/fs/notify/fdinfo.c
 @@ -13,6 +13,9 @@
@@ -984,7 +984,7 @@ index c62a87ee3b00..62e084ec0c6d 100644
  			   inode_mark->wd, inode->i_ino, inode->i_sb->s_dev,
  			   inotify_mark_user_mask(mark));
 diff --git a/fs/proc/base.c b/fs/proc/base.c
-index a260b080ef25..f229db5adef6 100644
+index a260b080e..f229db5ad 100644
 --- a/fs/proc/base.c
 +++ b/fs/proc/base.c
 @@ -2255,11 +2255,17 @@ static int map_files_get_link(struct dentry *dentry, struct path *path)
@@ -1011,7 +1011,7 @@ index a260b080ef25..f229db5adef6 100644
  
  out_mmput:
 diff --git a/fs/proc/cmdline.c b/fs/proc/cmdline.c
-index 25f6b35ee1e1..29439fd0d02a 100644
+index 25f6b35ee..29439fd0d 100644
 --- a/fs/proc/cmdline.c
 +++ b/fs/proc/cmdline.c
 @@ -30,8 +30,18 @@ static void proc_command_line_init(void) {
@@ -1034,7 +1034,7 @@ index 25f6b35ee1e1..29439fd0d02a 100644
  	seq_printf(m, "%s\n", proc_command_line);
  #else
 diff --git a/fs/proc/fd.c b/fs/proc/fd.c
-index 96fc70225e54..f5cc2d5984d7 100644
+index 96fc70225..f5cc2d598 100644
 --- a/fs/proc/fd.c
 +++ b/fs/proc/fd.c
 @@ -12,6 +12,9 @@
@@ -1079,7 +1079,7 @@ index 96fc70225e54..f5cc2d5984d7 100644
  	show_fd_locks(m, file, files);
  	if (seq_has_overflowed(m))
 diff --git a/fs/proc/task_mmu.c b/fs/proc/task_mmu.c
-index 21710afd06c4..5e628793ba3c 100644
+index 21710afd0..3870a3119 100644
 --- a/fs/proc/task_mmu.c
 +++ b/fs/proc/task_mmu.c
 @@ -20,6 +20,9 @@
@@ -1092,10 +1092,27 @@ index 21710afd06c4..5e628793ba3c 100644
  #include <linux/mm_inline.h>
  
  #include <asm/elf.h>
-@@ -350,6 +353,10 @@ static void show_vma_header_prefix(struct seq_file *m,
+@@ -350,6 +353,27 @@ static void show_vma_header_prefix(struct seq_file *m,
  		   MAJOR(dev), MINOR(dev), ino);
  }
  
++static void show_vma_header_prefix_fake(struct seq_file *m,
++				   unsigned long start, unsigned long end,
++				   vm_flags_t flags, unsigned long long pgoff,
++				   dev_t dev, unsigned long ino)
++{
++	seq_setwidth(m, 25 + sizeof(void *) * 6 - 1);
++	seq_printf(m, "%08lx-%08lx %c%c%c%c %08llx %02x:%02x %lu ",
++		   start,
++		   end,
++		   flags & VM_READ ? 'r' : '-',
++		   flags & VM_WRITE ? '-' : '-',
++		   flags & VM_EXEC ? '-' : '-',
++		   flags & VM_MAYSHARE ? 's' : 'p',
++		   pgoff,
++		   MAJOR(dev), MINOR(dev), ino);
++}
++
 +#ifdef CONFIG_KSU_SUSFS_SUS_KSTAT
 +extern void susfs_sus_ino_for_show_map_vma(unsigned long ino, dev_t *out_dev, unsigned long *out_ino);
 +#endif
@@ -1103,7 +1120,7 @@ index 21710afd06c4..5e628793ba3c 100644
  static void
  show_map_vma(struct seq_file *m, struct vm_area_struct *vma, int is_pid)
  {
-@@ -364,9 +371,23 @@ show_map_vma(struct seq_file *m, struct vm_area_struct *vma, int is_pid)
+@@ -364,9 +388,29 @@ show_map_vma(struct seq_file *m, struct vm_area_struct *vma, int is_pid)
  
  	if (file) {
  		struct inode *inode = file_inode(vma->vm_file);
@@ -1122,13 +1139,19 @@ index 21710afd06c4..5e628793ba3c 100644
 +		struct dentry *dentry = file->f_path.dentry;
 +        if (dentry) {
 +        	const char *path = (const char *)dentry->d_name.name; 
-+            	if (strstr(path, "lineage")) { return; }
++            	if (strstr(path, "lineage")) { 
++	  	start = vma->vm_start;
++		end = vma->vm_end;
++		show_vma_header_prefix_fake(m, start, end, flags, pgoff, dev, ino);
++            	name = "/system/framework/framework-res.apk";
++		goto done;
++            	 	}
 +            	}
  	}
  
  	start = vma->vm_start;
 diff --git a/fs/proc_namespace.c b/fs/proc_namespace.c
-index b859aaeecb27..5f35aba40730 100644
+index b859aaeec..5f35aba40 100644
 --- a/fs/proc_namespace.c
 +++ b/fs/proc_namespace.c
 @@ -12,12 +12,20 @@
@@ -1189,7 +1212,7 @@ index b859aaeecb27..5f35aba40730 100644
  	if (sb->s_op->show_devname) {
  		seq_puts(m, "device ");
 diff --git a/fs/readdir.c b/fs/readdir.c
-index e6f4c7b8884b..9f281557aa60 100644
+index e6f4c7b88..9f281557a 100644
 --- a/fs/readdir.c
 +++ b/fs/readdir.c
 @@ -23,6 +23,14 @@
@@ -1646,7 +1669,7 @@ index e6f4c7b8884b..9f281557aa60 100644
  	error = iterate_dir(f.file, &buf.ctx);
  	if (error >= 0)
 diff --git a/fs/stat.c b/fs/stat.c
-index 0fda4b6b8fb2..8ed3f4feb8fb 100644
+index 0fda4b6b8..8ed3f4feb 100644
 --- a/fs/stat.c
 +++ b/fs/stat.c
 @@ -17,6 +17,9 @@
@@ -1684,7 +1707,7 @@ index 0fda4b6b8fb2..8ed3f4feb8fb 100644
  	stat->ino = inode->i_ino;
  	stat->mode = inode->i_mode;
 diff --git a/fs/statfs.c b/fs/statfs.c
-index e6ceb3e8774f..52308f1dfd09 100644
+index e6ceb3e87..52308f1df 100644
 --- a/fs/statfs.c
 +++ b/fs/statfs.c
 @@ -9,6 +9,10 @@
@@ -1735,7 +1758,7 @@ index e6ceb3e8774f..52308f1dfd09 100644
  	drop_super(s);
  	return err;
 diff --git a/include/linux/mount.h b/include/linux/mount.h
-index 1ff21c19b0b9..99adc5d71846 100644
+index 1ff21c19b..99adc5d71 100644
 --- a/include/linux/mount.h
 +++ b/include/linux/mount.h
 @@ -69,6 +69,9 @@ struct vfsmount {
@@ -1749,7 +1772,7 @@ index 1ff21c19b0b9..99adc5d71846 100644
  
  struct file; /* forward dec */
 diff --git a/include/linux/sched.h b/include/linux/sched.h
-index 0e8a0a143624..0280f8b15ac5 100644
+index 0e8a0a143..0280f8b15 100644
 --- a/include/linux/sched.h
 +++ b/include/linux/sched.h
 @@ -1389,6 +1389,10 @@ struct task_struct {
@@ -1764,7 +1787,7 @@ index 0e8a0a143624..0280f8b15ac5 100644
  
  	/* CPU-specific state of this task: */
 diff --git a/kernel/kallsyms.c b/kernel/kallsyms.c
-index b5bfcdcb2a18..7e6d1bd8fe6e 100644
+index b5bfcdcb2..7e6d1bd8f 100644
 --- a/kernel/kallsyms.c
 +++ b/kernel/kallsyms.c
 @@ -646,8 +646,19 @@ static int s_show(struct seq_file *m, void *p)
@@ -1788,7 +1811,7 @@ index b5bfcdcb2a18..7e6d1bd8fe6e 100644
  }
  
 diff --git a/kernel/sys.c b/kernel/sys.c
-index 30801ea06a60..5a76d4255968 100644
+index 30801ea06..5a76d4255 100644
 --- a/kernel/sys.c
 +++ b/kernel/sys.c
 @@ -1182,12 +1182,18 @@ static int override_release(char __user *release, size_t len)
@@ -1811,7 +1834,7 @@ index 30801ea06a60..5a76d4255968 100644
  	if (copy_to_user(name, &tmp, sizeof(tmp)))
  		return -EFAULT;
 diff --git a/security/security.c b/security/security.c
-index dff185c22477..233ec154494d 100644
+index dff185c22..233ec1544 100644
 --- a/security/security.c
 +++ b/security/security.c
 @@ -221,6 +221,15 @@ EXPORT_SYMBOL(unregister_lsm_notifier);
