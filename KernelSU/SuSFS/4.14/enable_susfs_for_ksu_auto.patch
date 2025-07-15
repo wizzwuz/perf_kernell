@@ -1,8 +1,8 @@
 diff --git a/kernel/Kconfig b/kernel/Kconfig
-index 528bbc21..50d7e08e 100644
+index 528bbc21..db98af01 100644
 --- a/kernel/Kconfig
 +++ b/kernel/Kconfig
-@@ -30,4 +30,126 @@ config KSU_LSM_SECURITY_HOOKS
+@@ -30,4 +30,127 @@ config KSU_LSM_SECURITY_HOOKS
  	  Disabling this is mostly only useful for kernel 4.1 and older.
  	  Make sure to implement manual hooks on security/security.c.
  
@@ -10,6 +10,7 @@ index 528bbc21..50d7e08e 100644
 +config KSU_SUSFS
 +    bool "KernelSU addon - SUSFS"
 +    depends on KSU
++    depends on THREAD_INFO_IN_TASK
 +    default y
 +    help
 +      Patch and Enable SUSFS to kernel with KernelSU.
@@ -291,7 +292,7 @@ index bed501c4..e02aa514 100644
  
  #endif
 diff --git a/kernel/core_hook.c b/kernel/core_hook.c
-index b30df31d..5d86c63d 100644
+index b30df31d..28def03f 100644
 --- a/kernel/core_hook.c
 +++ b/kernel/core_hook.c
 @@ -22,6 +22,10 @@
@@ -823,7 +824,7 @@ index b30df31d..5d86c63d 100644
  LSM_HANDLER_TYPE ksu_handle_setuid(struct cred *new, const struct cred *old)
  {
  	// this hook is used for umounting overlayfs for some uid, if there isn't any module mounted, just ignore it!
-@@ -574,6 +974,31 @@ LSM_HANDLER_TYPE ksu_handle_setuid(struct cred *new, const struct cred *old)
+@@ -574,6 +974,37 @@ LSM_HANDLER_TYPE ksu_handle_setuid(struct cred *new, const struct cred *old)
  		return 0;
  	}
  
@@ -843,11 +844,17 @@ index b30df31d..5d86c63d 100644
 +	//   spawned by zygote which KSU will ignore it by default, the only fix for now is to
 +	//   force a umount for those uid
 +	// - Therefore make sure your root app doesn't use isolated service for root access
++	// - Kudos to ThePedroo, the author and maintainer of Rezygisk for finding and reporting
++	//   the detection, really big helps here!
 +		else if (new_uid.val >= 90000 && new_uid.val < 1000000 && susfs_is_umount_for_zygote_iso_service_enabled) {
 +				task_lock(current);
-+				current->susfs_task_state |= TASK_STRUCT_NON_ROOT_USER_APP_PROC;
++				susfs_set_current_non_root_user_app_proc();
 +				task_unlock(current);
++				#ifdef CONFIG_KSU_SUSFS_SUS_MOUNT
++			if (susfs_is_umount_for_zygote_iso_service_enabled) {
 +				goto out_susfs_try_umount_all;
++			}
++		        #endif // #ifdef CONFIG_KSU_SUSFS_SUS_MOUNT	
 +		}
 +	}
 +#endif
@@ -855,14 +862,14 @@ index b30df31d..5d86c63d 100644
  	if (!is_appuid(new_uid) || is_unsupported_uid(new_uid.val)) {
  		// pr_info("handle setuid ignore non application or isolated uid: %d\n", new_uid.val);
  		return 0;
-@@ -583,7 +1008,18 @@ LSM_HANDLER_TYPE ksu_handle_setuid(struct cred *new, const struct cred *old)
+@@ -583,7 +1014,18 @@ LSM_HANDLER_TYPE ksu_handle_setuid(struct cred *new, const struct cred *old)
  		// pr_info("handle setuid ignore allowed application: %d\n", new_uid.val);
  		return 0;
  	}
 +#ifdef CONFIG_KSU_SUSFS
 +	else {
 +		task_lock(current);
-+		current->susfs_task_state |= TASK_STRUCT_NON_ROOT_USER_APP_PROC;
++		susfs_set_current_non_root_user_app_proc();
 +		task_unlock(current);
 +		//goto out_susfs_try_umount_all;
 +	}
@@ -874,7 +881,7 @@ index b30df31d..5d86c63d 100644
  	if (!ksu_uid_should_umount(new_uid.val)) {
  		return 0;
  	} else {
-@@ -592,10 +1028,12 @@ LSM_HANDLER_TYPE ksu_handle_setuid(struct cred *new, const struct cred *old)
+@@ -592,10 +1034,12 @@ LSM_HANDLER_TYPE ksu_handle_setuid(struct cred *new, const struct cred *old)
  #endif
  	}
  
@@ -888,7 +895,7 @@ index b30df31d..5d86c63d 100644
  	if (!is_zygote_child) {
  		pr_info("handle umount ignore non zygote child: %d\n",
  			current->pid);
-@@ -607,17 +1045,32 @@ LSM_HANDLER_TYPE ksu_handle_setuid(struct cred *new, const struct cred *old)
+@@ -607,17 +1051,32 @@ LSM_HANDLER_TYPE ksu_handle_setuid(struct cred *new, const struct cred *old)
  		current->pid);
  #endif
  
