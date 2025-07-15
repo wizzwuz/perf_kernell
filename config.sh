@@ -53,8 +53,6 @@ if [[ $KSU_ENABLED == "true" ]] && [[ ! -z "$KERNELSU_DIR" ]]; then
         cp $WORKDIR/patches/KernelSU/SuSFS/$KERNEL_VER/add_susfs_in_kernel-$KERNEL_VER.patch $KERNEL_DIR/
     	cp $WORKDIR/patches/KernelSU/SuSFS/$KERNEL_VER/susfs.c $KERNEL_DIR/fs/
     	cp $WORKDIR/patches/KernelSU/SuSFS/$KERNEL_VER/susfs.h $KERNEL_DIR/include/linux/
-	cp $WORKDIR/patches/KernelSU/SuSFS/$KERNEL_VER/sus_su.c $KERNEL_DIR/fs/
-	cp $WORKDIR/patches/KernelSU/SuSFS/$KERNEL_VER/sus_su.h $KERNEL_DIR/include/linux/
 	cp $WORKDIR/patches/KernelSU/SuSFS/$KERNEL_VER/susfs_def.h $KERNEL_DIR/include/linux/
     	cd $KERNEL_DIR && patch -p1 -F 3 < add_susfs_in_kernel-$KERNEL_VER.patch
     	msg "Importing SuSFS for $KERNEL_VER kernel..."
@@ -118,8 +116,6 @@ elif
     cp $WORKDIR/patches/KernelSU/SuSFS/$KERNEL_VER/add_susfs_in_kernel-$KERNEL_VER.patch $KERNEL_DIR/
     cp $WORKDIR/patches/KernelSU/SuSFS/$KERNEL_VER/susfs.c $KERNEL_DIR/fs/
     cp $WORKDIR/patches/KernelSU/SuSFS/$KERNEL_VER/susfs.h $KERNEL_DIR/include/linux/
-    cp $WORKDIR/patches/KernelSU/SuSFS/$KERNEL_VER/sus_su.c $KERNEL_DIR/fs/
-    cp $WORKDIR/patches/KernelSU/SuSFS/$KERNEL_VER/sus_su.h $KERNEL_DIR/include/linux/
     cp $WORKDIR/patches/KernelSU/SuSFS/$KERNEL_VER/susfs_def.h $KERNEL_DIR/include/linux/
     cd $KERNEL_DIR && patch -p1 -F 3 < add_susfs_in_kernel-$KERNEL_VER.patch
     msg "Importing SuSFS into $KERNEL_VER kernel..."
