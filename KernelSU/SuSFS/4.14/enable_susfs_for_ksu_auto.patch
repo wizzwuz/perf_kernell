@@ -292,7 +292,7 @@ index bed501c4..e02aa514 100644
  
  #endif
 diff --git a/kernel/core_hook.c b/kernel/core_hook.c
-index b30df31d..28def03f 100644
+index 60b170c2..a94fbe6a 100644
 --- a/kernel/core_hook.c
 +++ b/kernel/core_hook.c
 @@ -22,6 +22,10 @@
@@ -1003,10 +1003,10 @@ index d74e264a..300c0989 100644
  MODULE_LICENSE("GPL");
  MODULE_AUTHOR("weishu");
 diff --git a/kernel/ksud.c b/kernel/ksud.c
-index f978327b..7c6d286e 100644
+index 185949b5..08315c86 100644
 --- a/kernel/ksud.c
 +++ b/kernel/ksud.c
-@@ -64,15 +64,15 @@ bool ksu_input_hook __read_mostly = true;
+@@ -63,15 +63,15 @@ bool ksu_input_hook __read_mostly = true;
  
  u32 ksu_devpts_sid;
  
@@ -1025,7 +1025,7 @@ index f978327b..7c6d286e 100644
  	ksu_load_allow_list();
  	// sanity check, this may influence the performance
  	stop_input_hook();
-@@ -102,7 +102,6 @@ static int ksu_handle_bprm_ksud(const char *filename, const char *argv1, const c
+@@ -101,7 +101,6 @@ static int ksu_handle_bprm_ksud(const char *filename, const char *argv1, const c
  	if (!filename)
  		return 0;
  
@@ -1033,7 +1033,7 @@ index f978327b..7c6d286e 100644
  	// debug! remove me!
  	pr_info("%s: filename: %s argv1: %s envp_len: %zu\n", __func__, filename, argv1, envp_len);
  
-@@ -114,7 +113,7 @@ static int ksu_handle_bprm_ksud(const char *filename, const char *argv1, const c
+@@ -113,7 +112,7 @@ static int ksu_handle_bprm_ksud(const char *filename, const char *argv1, const c
  		&& (!memcmp(filename, system_bin_init, sizeof(system_bin_init) - 1))) {
  		if (argv1 && !strcmp(argv1, "second_stage")) {
  			pr_info("%s: /system/bin/init second_stage executed\n", __func__);
@@ -1042,7 +1042,7 @@ index f978327b..7c6d286e 100644
  			init_second_stage_executed = true;
  			ksu_android_ns_fs_check();
  		}
-@@ -125,7 +124,7 @@ static int ksu_handle_bprm_ksud(const char *filename, const char *argv1, const c
+@@ -124,7 +123,7 @@ static int ksu_handle_bprm_ksud(const char *filename, const char *argv1, const c
  		&& (!memcmp(filename, old_system_init, sizeof(old_system_init) - 1))) {
  		if (argv1 && !strcmp(argv1, "--second-stage")) {
  			pr_info("%s: /init --second-stage executed\n", __func__);
@@ -1051,7 +1051,7 @@ index f978327b..7c6d286e 100644
  			init_second_stage_executed = true;
  			ksu_android_ns_fs_check();
  		}
-@@ -149,7 +148,7 @@ static int ksu_handle_bprm_ksud(const char *filename, const char *argv1, const c
+@@ -148,7 +147,7 @@ static int ksu_handle_bprm_ksud(const char *filename, const char *argv1, const c
  		if (!strcmp(envp_n, "INIT_SECOND_STAGE=1")
  			|| !strcmp(envp_n, "INIT_SECOND_STAGE=true") ) {
  			pr_info("%s: /init +envp: INIT_SECOND_STAGE executed\n", __func__);
@@ -1060,7 +1060,7 @@ index f978327b..7c6d286e 100644
  			init_second_stage_executed = true;
  			ksu_android_ns_fs_check();
  		}
-@@ -159,7 +158,7 @@ first_app_process:
+@@ -158,7 +157,7 @@ first_app_process:
  	if (first_app_process && !memcmp(filename, app_process, sizeof(app_process) - 1)) {
  		first_app_process = false;
  		pr_info("%s: exec app_process, /data prepared, second_stage: %d\n", __func__, init_second_stage_executed);
@@ -1333,7 +1333,7 @@ index 07120c25..d0dfdf9c 100644
  u32 ksu_get_devpts_sid();
  
 diff --git a/kernel/sucompat.c b/kernel/sucompat.c
-index b90be7e8..a7ec6795 100644
+index 388acbc4..6e3dedee 100644
 --- a/kernel/sucompat.c
 +++ b/kernel/sucompat.c
 @@ -23,7 +23,7 @@
@@ -1352,7 +1352,7 @@ index b90be7e8..a7ec6795 100644
 -	const char su[] = SU_PATH;
 +    const char su[] = SU_PATH;
  
- 	char path[sizeof(su) + 1];
+ 	char path[sizeof(su)]; // sizeof includes nullterm already!
  	if (ksu_copy_from_user_retry(path, *filename_user, sizeof(path)))
 @@ -85,7 +85,7 @@ static int ksu_sucompat_user_common(const char __user **filename_user,
  	if (escalate) {
