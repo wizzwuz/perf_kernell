@@ -1,8 +1,8 @@
 diff --git a/kernel/Kconfig b/kernel/Kconfig
-index 528bbc21..db98af01 100644
+index 528bbc21..1f8e5092 100644
 --- a/kernel/Kconfig
 +++ b/kernel/Kconfig
-@@ -30,4 +30,127 @@ config KSU_LSM_SECURITY_HOOKS
+@@ -30,4 +30,128 @@ config KSU_LSM_SECURITY_HOOKS
  	  Disabling this is mostly only useful for kernel 4.1 and older.
  	  Make sure to implement manual hooks on security/security.c.
  
@@ -18,6 +18,7 @@ index 528bbc21..db98af01 100644
 +config KSU_SUSFS_HAS_MAGIC_MOUNT
 +    bool "Say yes if the current KernelSU repo has magic mount implemented (default y)"
 +    depends on KSU
++    depends on KSU_SUSFS
 +    default y
 +    help
 +      - Enable to indicate that the current SUSFS kernel supports the auto hide features for 5ec1cff's Magic Mount KernelSU
