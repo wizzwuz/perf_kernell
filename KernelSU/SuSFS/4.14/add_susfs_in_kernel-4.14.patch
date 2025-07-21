@@ -986,33 +986,6 @@ index c62a87ee3..f3437ed78 100644
  		seq_printf(m, "inotify wd:%x ino:%lx sdev:%x mask:%x ignored_mask:0 ",
  			   inode_mark->wd, inode->i_ino, inode->i_sb->s_dev,
  			   inotify_mark_user_mask(mark));
-diff --git a/fs/proc/base.c b/fs/proc/base.c
-index a260b080e..f229db5ad 100644
---- a/fs/proc/base.c
-+++ b/fs/proc/base.c
-@@ -2255,11 +2255,17 @@ static int map_files_get_link(struct dentry *dentry, struct path *path)
- 	rc = -ENOENT;
- 	down_read(&mm->mmap_sem);
- 	vma = find_exact_vma(mm, vm_start, vm_end);
--	if (vma && vma->vm_file) {
--		*path = vma->vm_file->f_path;
--		path_get(path);
--		rc = 0;
--	}
-+	if (vma) {
-+        	if (vma->vm_file) {
-+            		if (strstr(vma->vm_file->f_path.dentry->d_name.name, "lineage")) { 
-+            		rc = kern_path("/system/framework/framework-res.apk", LOOKUP_FOLLOW, path);
-+        	} else {
-+			*path = vma->vm_file->f_path;
-+			path_get(path);
-+                	rc = 0;
-+            		}
-+        	}
-+    	}
- 	up_read(&mm->mmap_sem);
- 
- out_mmput:
 diff --git a/fs/proc/cmdline.c b/fs/proc/cmdline.c
 index 25f6b35ee..29439fd0d 100644
 --- a/fs/proc/cmdline.c
@@ -1082,7 +1055,7 @@ index 96fc70225..7c5583125 100644
  	show_fd_locks(m, file, files);
  	if (seq_has_overflowed(m))
 diff --git a/fs/proc/task_mmu.c b/fs/proc/task_mmu.c
-index 21710afd0..f4b1510e0 100644
+index 21710afd0..5d5161e7d 100644
 --- a/fs/proc/task_mmu.c
 +++ b/fs/proc/task_mmu.c
 @@ -20,6 +20,9 @@
@@ -1095,27 +1068,10 @@ index 21710afd0..f4b1510e0 100644
  #include <linux/mm_inline.h>
  
  #include <asm/elf.h>
-@@ -350,6 +353,27 @@ static void show_vma_header_prefix(struct seq_file *m,
+@@ -350,6 +353,10 @@ static void show_vma_header_prefix(struct seq_file *m,
  		   MAJOR(dev), MINOR(dev), ino);
  }
  
-+static void show_vma_header_prefix_fake(struct seq_file *m,
-+				   unsigned long start, unsigned long end,
-+				   vm_flags_t flags, unsigned long long pgoff,
-+				   dev_t dev, unsigned long ino)
-+{
-+	seq_setwidth(m, 25 + sizeof(void *) * 6 - 1);
-+	seq_printf(m, "%08lx-%08lx %c%c%c%c %08llx %02x:%02x %lu ",
-+		   start,
-+		   end,
-+		   flags & VM_READ ? 'r' : '-',
-+		   flags & VM_WRITE ? '-' : '-',
-+		   flags & VM_EXEC ? '-' : '-',
-+		   flags & VM_MAYSHARE ? 's' : 'p',
-+		   pgoff,
-+		   MAJOR(dev), MINOR(dev), ino);
-+}
-+
 +#ifdef CONFIG_KSU_SUSFS_SUS_KSTAT
 +extern void susfs_sus_ino_for_show_map_vma(unsigned long ino, dev_t *out_dev, unsigned long *out_ino);
 +#endif
@@ -1123,7 +1079,7 @@ index 21710afd0..f4b1510e0 100644
  static void
  show_map_vma(struct seq_file *m, struct vm_area_struct *vma, int is_pid)
  {
-@@ -364,9 +388,29 @@ show_map_vma(struct seq_file *m, struct vm_area_struct *vma, int is_pid)
+@@ -364,8 +371,17 @@ show_map_vma(struct seq_file *m, struct vm_area_struct *vma, int is_pid)
  
  	if (file) {
  		struct inode *inode = file_inode(vma->vm_file);
@@ -1139,20 +1095,8 @@ index 21710afd0..f4b1510e0 100644
 +bypass_orig_flow:
 +#endif
  		pgoff = ((loff_t)vma->vm_pgoff) << PAGE_SHIFT;
-+		struct dentry *dentry = file->f_path.dentry;
-+        if (dentry) {
-+        	const char *path = (const char *)dentry->d_name.name; 
-+            	if (strstr(path, "lineage")) { 
-+	  	start = vma->vm_start;
-+		end = vma->vm_end;
-+		show_vma_header_prefix_fake(m, start, end, flags, pgoff, dev, ino);
-+            	name = "/system/framework/framework-res.apk";
-+		goto done;
-+            	 	}
-+            	}
  	}
  
- 	start = vma->vm_start;
 diff --git a/fs/proc_namespace.c b/fs/proc_namespace.c
 index b859aaeec..5f35aba40 100644
 --- a/fs/proc_namespace.c
