@@ -1,5 +1,5 @@
 diff --git a/fs/Makefile b/fs/Makefile
-index 065a25d9b54..64f3b07b13c 100644
+index 065a25d9b54b..64f3b07b13c6 100644
 --- a/fs/Makefile
 +++ b/fs/Makefile
 @@ -14,6 +14,8 @@ obj-y :=	open.o read_write.o file_table.o super.o \
@@ -12,7 +12,7 @@ index 065a25d9b54..64f3b07b13c 100644
  obj-y +=	buffer.o block_dev.o direct-io.o mpage.o
  else
 diff --git a/fs/namei.c b/fs/namei.c
-index 360e08762d8..8c7dc0aea26 100644
+index 360e08762d8e..8c7dc0aea265 100644
 --- a/fs/namei.c
 +++ b/fs/namei.c
 @@ -39,6 +39,9 @@
@@ -461,7 +461,7 @@ index 360e08762d8..8c7dc0aea26 100644
  	if (type != LAST_NORM)
  		goto exit1;
 diff --git a/fs/namespace.c b/fs/namespace.c
-index 2140f622055..c8c8cc57b0a 100644
+index 2140f6220552..c8c8cc57b0af 100644
 --- a/fs/namespace.c
 +++ b/fs/namespace.c
 @@ -27,10 +27,39 @@
@@ -896,7 +896,7 @@ index 2140f622055..c8c8cc57b0a 100644
 +}
 +#endif
 diff --git a/fs/notify/fdinfo.c b/fs/notify/fdinfo.c
-index c62a87ee3b0..f3437ed78b5 100644
+index c62a87ee3b00..f3437ed78b5c 100644
 --- a/fs/notify/fdinfo.c
 +++ b/fs/notify/fdinfo.c
 @@ -13,6 +13,9 @@
@@ -987,7 +987,7 @@ index c62a87ee3b0..f3437ed78b5 100644
  			   inode_mark->wd, inode->i_ino, inode->i_sb->s_dev,
  			   inotify_mark_user_mask(mark));
 diff --git a/fs/proc/cmdline.c b/fs/proc/cmdline.c
-index 25f6b35ee1e..29439fd0d02 100644
+index 25f6b35ee1e1..29439fd0d02a 100644
 --- a/fs/proc/cmdline.c
 +++ b/fs/proc/cmdline.c
 @@ -30,8 +30,18 @@ static void proc_command_line_init(void) {
@@ -1010,7 +1010,7 @@ index 25f6b35ee1e..29439fd0d02 100644
  	seq_printf(m, "%s\n", proc_command_line);
  #else
 diff --git a/fs/proc/fd.c b/fs/proc/fd.c
-index 96fc70225e5..7c55831258e 100644
+index 96fc70225e54..7c55831258e6 100644
 --- a/fs/proc/fd.c
 +++ b/fs/proc/fd.c
 @@ -12,6 +12,9 @@
@@ -1055,7 +1055,7 @@ index 96fc70225e5..7c55831258e 100644
  	show_fd_locks(m, file, files);
  	if (seq_has_overflowed(m))
 diff --git a/fs/proc/task_mmu.c b/fs/proc/task_mmu.c
-index 21710afd06c..5d5161e7df0 100644
+index 7294cfeb1583..ecba57e58975 100644
 --- a/fs/proc/task_mmu.c
 +++ b/fs/proc/task_mmu.c
 @@ -20,6 +20,9 @@
@@ -1098,7 +1098,7 @@ index 21710afd06c..5d5161e7df0 100644
  	}
  
 diff --git a/fs/proc_namespace.c b/fs/proc_namespace.c
-index b859aaeecb2..a3bd51421c7 100644
+index b859aaeecb27..a3bd51421c79 100644
 --- a/fs/proc_namespace.c
 +++ b/fs/proc_namespace.c
 @@ -12,12 +12,19 @@
@@ -1161,7 +1161,7 @@ index b859aaeecb2..a3bd51421c7 100644
  	if (sb->s_op->show_devname) {
  		seq_puts(m, "device ");
 diff --git a/fs/readdir.c b/fs/readdir.c
-index e6f4c7b8884..9f281557aa6 100644
+index e6f4c7b8884b..9f281557aa60 100644
 --- a/fs/readdir.c
 +++ b/fs/readdir.c
 @@ -23,6 +23,14 @@
@@ -1618,7 +1618,7 @@ index e6f4c7b8884..9f281557aa6 100644
  	error = iterate_dir(f.file, &buf.ctx);
  	if (error >= 0)
 diff --git a/fs/stat.c b/fs/stat.c
-index 0fda4b6b8fb..bbc053d0459 100644
+index 0fda4b6b8fb2..bbc053d0459b 100644
 --- a/fs/stat.c
 +++ b/fs/stat.c
 @@ -17,6 +17,9 @@
@@ -1656,7 +1656,7 @@ index 0fda4b6b8fb..bbc053d0459 100644
  	stat->ino = inode->i_ino;
  	stat->mode = inode->i_mode;
 diff --git a/fs/statfs.c b/fs/statfs.c
-index e6ceb3e8774..bdf49a17878 100644
+index e6ceb3e8774f..bdf49a17878e 100644
 --- a/fs/statfs.c
 +++ b/fs/statfs.c
 @@ -9,6 +9,10 @@
@@ -1707,7 +1707,7 @@ index e6ceb3e8774..bdf49a17878 100644
  	drop_super(s);
  	return err;
 diff --git a/include/linux/mount.h b/include/linux/mount.h
-index 1ff21c19b0b..99adc5d7184 100644
+index 1ff21c19b0b9..99adc5d71846 100644
 --- a/include/linux/mount.h
 +++ b/include/linux/mount.h
 @@ -69,6 +69,9 @@ struct vfsmount {
@@ -1721,10 +1721,10 @@ index 1ff21c19b0b..99adc5d7184 100644
  
  struct file; /* forward dec */
 diff --git a/include/linux/sched.h b/include/linux/sched.h
-index 0e8a0a14362..0280f8b15ac 100644
+index d5b30078ed74..ecd70573bd57 100644
 --- a/include/linux/sched.h
 +++ b/include/linux/sched.h
-@@ -1389,6 +1389,10 @@ struct task_struct {
+@@ -1392,6 +1392,10 @@ struct task_struct {
  	 * New fields for task_struct should be added above here, so that
  	 * they are included in the randomized portion of task_struct.
  	 */
@@ -1736,7 +1736,7 @@ index 0e8a0a14362..0280f8b15ac 100644
  
  	/* CPU-specific state of this task: */
 diff --git a/kernel/kallsyms.c b/kernel/kallsyms.c
-index 0a5345e8c16..3a4269f2e6f 100644
+index 0a5345e8c169..3a4269f2e6fa 100644
 --- a/kernel/kallsyms.c
 +++ b/kernel/kallsyms.c
 @@ -647,8 +647,19 @@ static int s_show(struct seq_file *m, void *p)
@@ -1760,7 +1760,7 @@ index 0a5345e8c16..3a4269f2e6f 100644
  }
  
 diff --git a/kernel/sys.c b/kernel/sys.c
-index e7f051e7449..36a1816e24d 100644
+index e7f051e7449b..36a1816e24d6 100644
 --- a/kernel/sys.c
 +++ b/kernel/sys.c
 @@ -1182,12 +1182,18 @@ static int override_release(char __user *release, size_t len)
@@ -1783,7 +1783,7 @@ index e7f051e7449..36a1816e24d 100644
  		(!strncmp(current->comm, "bpfloader", 9) ||
  		!strncmp(current->comm, "netbpfload", 10) ||
 diff --git a/security/security.c b/security/security.c
-index dff185c2247..233ec154494 100644
+index dff185c22477..233ec154494d 100644
 --- a/security/security.c
 +++ b/security/security.c
 @@ -221,6 +221,15 @@ EXPORT_SYMBOL(unregister_lsm_notifier);
@@ -1854,3 +1854,47 @@ index dff185c2247..233ec154494 100644
  	list_for_each_entry(hp, &security_hook_heads.task_prctl, list) {
  		thisrc = hp->hook.task_prctl(option, arg2, arg3, arg4, arg5);
  		if (thisrc != -ENOSYS) {
+diff --git a/security/selinux/avc.c b/security/selinux/avc.c
+index 1b444089be03..dcd7483fd60c 100644
+--- a/security/selinux/avc.c
++++ b/security/selinux/avc.c
+@@ -44,6 +44,12 @@
+ #define avc_cache_stats_incr(field)	((void)0)
+ #endif
+ 
++#ifdef CONFIG_KSU_SUSFS
++extern u32 susfs_ksu_sid;
++extern u32 susfs_kernel_sid;
++bool susfs_is_avc_log_spoofing_enabled = false;
++#endif
++
+ struct avc_entry {
+ 	u32			ssid;
+ 	u32			tsid;
+@@ -187,6 +193,15 @@ static void avc_dump_query(struct audit_buffer *ab, struct selinux_state *state,
+ 	}
+ 
+ 	rc = security_sid_to_context(state, tsid, &scontext, &scontext_len);
++#ifdef CONFIG_KSU_SUSFS
++	if (unlikely(sad->tsid == susfs_ksu_sid && susfs_is_avc_log_spoofing_enabled)) {
++		if (rc)
++			audit_log_format(ab, " tsid=%d", susfs_kernel_sid);
++		else
++			audit_log_format(ab, " tcontext=%s", "u:r:kernel:s0");
++		goto bypass_orig_flow;
++	}
++#endif
+ 	if (rc)
+ 		audit_log_format(ab, " tsid=%d", tsid);
+ 	else {
+@@ -194,6 +209,10 @@ static void avc_dump_query(struct audit_buffer *ab, struct selinux_state *state,
+ 		kfree(scontext);
+ 	}
+ 
++#ifdef CONFIG_KSU_SUSFS
++bypass_orig_flow:
++#endif
++
+ 	BUG_ON(!tclass || tclass >= ARRAY_SIZE(secclass_map));
+ 	audit_log_format(ab, " tclass=%s", secclass_map[tclass-1].name);
+ }
