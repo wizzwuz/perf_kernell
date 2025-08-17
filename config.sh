@@ -72,7 +72,7 @@ if [[ $KSU_ENABLED == "true" ]] && [[ ! -z "$KERNELSU_DIR" ]]; then
     SUSFS_VERSION=$(grep "SUSFS_VERSION" $WORKDIR/patches/KernelSU/SuSFS/$KERNEL_VER/susfs.h | cut -d '"' -f2 )
     msg "KernelSU Version: $KERNELSU_VERSION"
     msg "SuSFS version: $SUSFS_VERSION"
-    sed -i "s/^CONFIG_LOCALVERSION=.*/CONFIG_LOCALVERSION=\"-$KERNEL_BRANCH-$KERNEL_NAME-κsu\"/" $DEVICE_DEFCONFIG_FILE
+    sed -i "s/^CONFIG_LOCALVERSION=.*/CONFIG_LOCALVERSION=\"-$KERNEL_NAME-$KERNEL_BRANCH-xx\"/" $DEVICE_DEFCONFIG_FILE
 elif
    [[ $KSU_ENABLED == "true" ]]; then
     cd $KERNEL_DIR && curl -LSs "https://raw.githubusercontent.com/$KERNELSU_REPO/main/kernel/setup.sh" | bash -s main
@@ -138,7 +138,7 @@ elif
     SUSFS_VERSION=$(grep "SUSFS_VERSION" $WORKDIR/patches/KernelSU/SuSFS/$KERNEL_VER/susfs.h | cut -d '"' -f2 )
     msg "KernelSU Version: $KERNELSU_VERSION"
     msg "SuSFS version: $SUSFS_VERSION"
-    sed -i "s/^CONFIG_LOCALVERSION=.*/CONFIG_LOCALVERSION=\"-$KERNEL_BRANCH-$KERNEL_NAME-κsu\"/" $DEVICE_DEFCONFIG_FILE
+    sed -i "s/^CONFIG_LOCALVERSION=.*/CONFIG_LOCALVERSION=\"-$KERNEL_NAME-$KERNEL_BRANCH-xx\"/" $DEVICE_DEFCONFIG_FILE
 fi
 if [[ $KSU_ENABLED == "false" ]]; then
     echo "KernelSU Disabled"
