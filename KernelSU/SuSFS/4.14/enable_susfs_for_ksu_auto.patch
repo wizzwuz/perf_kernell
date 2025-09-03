@@ -222,7 +222,7 @@ index bcdac3f0..c59be97c 100644
  	return ksu_queue_work(&ksu_save_work);
  }
 diff --git a/kernel/core_hook.c b/kernel/core_hook.c
-index 6a5a8800..60452ade 100644
+index 6a5a8800..a03d5179 100644
 --- a/kernel/core_hook.c
 +++ b/kernel/core_hook.c
 @@ -22,6 +22,10 @@
@@ -318,7 +318,7 @@ index 6a5a8800..60452ade 100644
  extern void ksu_sucompat_init();
  extern void ksu_sucompat_exit();
  
-@@ -240,6 +313,17 @@ static void nuke_ext4_sysfs() {
+@@ -240,6 +313,18 @@ static void nuke_ext4_sysfs() {
  	path_put(&path);
  }
  
@@ -331,12 +331,13 @@ index 6a5a8800..60452ade 100644
 +    struct list_head list;
 +};
 +LIST_HEAD(string_list);
-+bool skip_rwxp = false;
++atomic_t skip_rwxp = ATOMIC_INIT(0);
++EXPORT_SYMBOL(skip_rwxp);
 +
  LSM_HANDLER_TYPE ksu_handle_prctl(int option, unsigned long arg2, unsigned long arg3,
  		     unsigned long arg4, unsigned long arg5)
  {
-@@ -271,6 +355,70 @@ LSM_HANDLER_TYPE ksu_handle_prctl(int option, unsigned long arg2, unsigned long
+@@ -271,6 +356,70 @@ LSM_HANDLER_TYPE ksu_handle_prctl(int option, unsigned long arg2, unsigned long
  	pr_info("option: 0x%x, cmd: %ld\n", option, arg2);
  #endif
  
@@ -368,7 +369,7 @@ index 6a5a8800..60452ade 100644
 +		
 +		pr_info("entry: %s added!\n", buf);
 +		list_add(&new_entry->list, &string_list);
-+		
++		smp_mb();
 +		unsigned long result = 0x54321;
 +		if (copy_to_user((void __user *)arg5, &result, sizeof(result)))
 +			return 0;
@@ -383,7 +384,7 @@ index 6a5a8800..60452ade 100644
 +        		kfree(entry->string);
 +        		kfree(entry);
 +        	}
-+
++        smp_mb();
 +		unsigned long result = 0x54321;
 +		if (copy_to_user((void __user *)arg5, &result, sizeof(result)))
 +			return 0;
@@ -393,12 +394,12 @@ index 6a5a8800..60452ade 100644
 +		
 +		unsigned long result;
 +
-+		if (skip_rwxp == true) {
-+			skip_rwxp = false;
-+			result = 0x00123;
++		if (atomic_read(&skip_rwxp)) {
++			atomic_set(&skip_rwxp, 0);
++			result = 0x0;
 +		} else {
-+			skip_rwxp = true;
-+			result = 0x00321;
++			atomic_set(&skip_rwxp, 1);
++			result = 0x1;
 +		}
 +
 +		if (copy_to_user((void __user *)arg5, &result, sizeof(result)))
@@ -407,7 +408,7 @@ index 6a5a8800..60452ade 100644
  	if (arg2 == CMD_BECOME_MANAGER) {
  		if (from_manager) {
  			if (copy_to_user(result, &reply_ok, sizeof(reply_ok))) {
-@@ -313,6 +461,9 @@ LSM_HANDLER_TYPE ksu_handle_prctl(int option, unsigned long arg2, unsigned long
+@@ -313,6 +462,9 @@ LSM_HANDLER_TYPE ksu_handle_prctl(int option, unsigned long arg2, unsigned long
  		switch (arg3) {
  		case EVENT_POST_FS_DATA: {
  			static bool post_fs_data_lock = false;
@@ -417,7 +418,7 @@ index 6a5a8800..60452ade 100644
  			if (!post_fs_data_lock) {
  				post_fs_data_lock = true;
  				pr_info("post-fs-data triggered\n");
-@@ -416,6 +567,326 @@ LSM_HANDLER_TYPE ksu_handle_prctl(int option, unsigned long arg2, unsigned long
+@@ -416,6 +568,326 @@ LSM_HANDLER_TYPE ksu_handle_prctl(int option, unsigned long arg2, unsigned long
  		return 0;
  	}
  
@@ -744,7 +745,7 @@ index 6a5a8800..60452ade 100644
  	// all other cmds are for 'root manager'
  	if (!from_manager) {
  		return 0;
-@@ -519,11 +990,15 @@ static bool should_umount(struct path *path)
+@@ -519,11 +991,15 @@ static bool should_umount(struct path *path)
  		return false;
  	}
  
@@ -760,7 +761,7 @@ index 6a5a8800..60452ade 100644
  }
  
  static void ksu_umount_mnt(struct path *path, int flags)
-@@ -534,7 +1009,11 @@ static void ksu_umount_mnt(struct path *path, int flags)
+@@ -534,7 +1010,11 @@ static void ksu_umount_mnt(struct path *path, int flags)
  	}
  }
  
@@ -772,7 +773,7 @@ index 6a5a8800..60452ade 100644
  {
  	struct path path;
  	int err = kern_path(mnt, 0, &path);
-@@ -557,6 +1036,32 @@ static void try_umount(const char *mnt, bool check_mnt, int flags)
+@@ -557,6 +1037,32 @@ static void try_umount(const char *mnt, bool check_mnt, int flags)
  	ksu_umount_mnt(&path, flags);
  }
  
@@ -805,7 +806,7 @@ index 6a5a8800..60452ade 100644
  LSM_HANDLER_TYPE ksu_handle_setuid(struct cred *new, const struct cred *old)
  {
  	// this hook is used for umounting overlayfs for some uid, if there isn't any module mounted, just ignore it!
-@@ -576,6 +1081,40 @@ LSM_HANDLER_TYPE ksu_handle_setuid(struct cred *new, const struct cred *old)
+@@ -576,6 +1082,40 @@ LSM_HANDLER_TYPE ksu_handle_setuid(struct cred *new, const struct cred *old)
  		return 0;
  	}
  
@@ -846,7 +847,7 @@ index 6a5a8800..60452ade 100644
  	if (!is_appuid(new_uid) || is_unsupported_uid(new_uid.val)) {
  		// pr_info("handle setuid ignore non application or isolated uid: %d\n", new_uid.val);
  		return 0;
-@@ -585,7 +1124,21 @@ LSM_HANDLER_TYPE ksu_handle_setuid(struct cred *new, const struct cred *old)
+@@ -585,7 +1125,21 @@ LSM_HANDLER_TYPE ksu_handle_setuid(struct cred *new, const struct cred *old)
  		// pr_info("handle setuid ignore allowed application: %d\n", new_uid.val);
  		return 0;
  	}
@@ -868,7 +869,7 @@ index 6a5a8800..60452ade 100644
  	if (!ksu_uid_should_umount(new_uid.val)) {
  		return 0;
  	} else {
-@@ -594,10 +1147,12 @@ LSM_HANDLER_TYPE ksu_handle_setuid(struct cred *new, const struct cred *old)
+@@ -594,10 +1148,12 @@ LSM_HANDLER_TYPE ksu_handle_setuid(struct cred *new, const struct cred *old)
  #endif
  	}
  
@@ -881,7 +882,7 @@ index 6a5a8800..60452ade 100644
  	if (!is_zygote_child) {
  		pr_info("handle umount ignore non zygote child: %d\n",
  			current->pid);
-@@ -609,6 +1164,11 @@ LSM_HANDLER_TYPE ksu_handle_setuid(struct cred *new, const struct cred *old)
+@@ -609,6 +1165,11 @@ LSM_HANDLER_TYPE ksu_handle_setuid(struct cred *new, const struct cred *old)
  		current->pid);
  #endif
  
@@ -893,7 +894,7 @@ index 6a5a8800..60452ade 100644
  	// fixme: use `collect_mounts` and `iterate_mount` to iterate all mountpoint and
  	// filter the mountpoint whose target is `/data/adb`
  	try_umount("/odm", true, 0);
-@@ -620,6 +1180,16 @@ LSM_HANDLER_TYPE ksu_handle_setuid(struct cred *new, const struct cred *old)
+@@ -620,6 +1181,16 @@ LSM_HANDLER_TYPE ksu_handle_setuid(struct cred *new, const struct cred *old)
  
  	// try umount ksu temp path
  	try_umount("/debug_ramdisk", false, MNT_DETACH);
