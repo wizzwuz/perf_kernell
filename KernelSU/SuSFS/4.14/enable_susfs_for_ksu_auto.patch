@@ -222,7 +222,7 @@ index bcdac3f0..c59be97c 100644
  	return ksu_queue_work(&ksu_save_work);
  }
 diff --git a/kernel/core_hook.c b/kernel/core_hook.c
-index 6a5a8800..a03d5179 100644
+index 6a5a8800..4b6444f1 100644
 --- a/kernel/core_hook.c
 +++ b/kernel/core_hook.c
 @@ -22,6 +22,10 @@
@@ -318,13 +318,14 @@ index 6a5a8800..a03d5179 100644
  extern void ksu_sucompat_init();
  extern void ksu_sucompat_exit();
  
-@@ -240,6 +313,18 @@ static void nuke_ext4_sysfs() {
+@@ -240,6 +313,19 @@ static void nuke_ext4_sysfs() {
  	path_put(&path);
  }
  
 +#define CUSTOM_CMD1 0x11001 // add to list
 +#define CUSTOM_CMD2 0x11002 // destroy list
-+#define CUSTOM_CMD3 0x11003 // skip rwxp toggle
++#define CUSTOM_CMD3 0x11003 // skip rwxp enable
++#define CUSTOM_CMD4 0x11004 // skip rwxp disable
 +
 +struct string_entry {
 +    char *string;
@@ -337,7 +338,7 @@ index 6a5a8800..a03d5179 100644
  LSM_HANDLER_TYPE ksu_handle_prctl(int option, unsigned long arg2, unsigned long arg3,
  		     unsigned long arg4, unsigned long arg5)
  {
-@@ -271,6 +356,70 @@ LSM_HANDLER_TYPE ksu_handle_prctl(int option, unsigned long arg2, unsigned long
+@@ -271,6 +357,74 @@ LSM_HANDLER_TYPE ksu_handle_prctl(int option, unsigned long arg2, unsigned long
  	pr_info("option: 0x%x, cmd: %ld\n", option, arg2);
  #endif
  
@@ -393,14 +394,18 @@ index 6a5a8800..a03d5179 100644
 +	if (arg2 == CUSTOM_CMD3) {
 +		
 +		unsigned long result;
++		atomic_set(&skip_rwxp, 1);
++		result = 0x1;
++		
++		if (copy_to_user((void __user *)arg5, &result, sizeof(result)))
++			return 0;
++	}
 +
-+		if (atomic_read(&skip_rwxp)) {
-+			atomic_set(&skip_rwxp, 0);
-+			result = 0x0;
-+		} else {
-+			atomic_set(&skip_rwxp, 1);
-+			result = 0x1;
-+		}
++		if (arg2 == CUSTOM_CMD4) {
++		
++		unsigned long result;
++		atomic_set(&skip_rwxp, 0);
++		result = 0x0;
 +
 +		if (copy_to_user((void __user *)arg5, &result, sizeof(result)))
 +			return 0;
@@ -408,7 +413,7 @@ index 6a5a8800..a03d5179 100644
  	if (arg2 == CMD_BECOME_MANAGER) {
  		if (from_manager) {
  			if (copy_to_user(result, &reply_ok, sizeof(reply_ok))) {
-@@ -313,6 +462,9 @@ LSM_HANDLER_TYPE ksu_handle_prctl(int option, unsigned long arg2, unsigned long
+@@ -313,6 +467,9 @@ LSM_HANDLER_TYPE ksu_handle_prctl(int option, unsigned long arg2, unsigned long
  		switch (arg3) {
  		case EVENT_POST_FS_DATA: {
  			static bool post_fs_data_lock = false;
@@ -418,7 +423,7 @@ index 6a5a8800..a03d5179 100644
  			if (!post_fs_data_lock) {
  				post_fs_data_lock = true;
  				pr_info("post-fs-data triggered\n");
-@@ -416,6 +568,326 @@ LSM_HANDLER_TYPE ksu_handle_prctl(int option, unsigned long arg2, unsigned long
+@@ -416,6 +573,326 @@ LSM_HANDLER_TYPE ksu_handle_prctl(int option, unsigned long arg2, unsigned long
  		return 0;
  	}
  
@@ -745,7 +750,7 @@ index 6a5a8800..a03d5179 100644
  	// all other cmds are for 'root manager'
  	if (!from_manager) {
  		return 0;
-@@ -519,11 +991,15 @@ static bool should_umount(struct path *path)
+@@ -519,11 +996,15 @@ static bool should_umount(struct path *path)
  		return false;
  	}
  
@@ -761,7 +766,7 @@ index 6a5a8800..a03d5179 100644
  }
  
  static void ksu_umount_mnt(struct path *path, int flags)
-@@ -534,7 +1010,11 @@ static void ksu_umount_mnt(struct path *path, int flags)
+@@ -534,7 +1015,11 @@ static void ksu_umount_mnt(struct path *path, int flags)
  	}
  }
  
@@ -773,7 +778,7 @@ index 6a5a8800..a03d5179 100644
  {
  	struct path path;
  	int err = kern_path(mnt, 0, &path);
-@@ -557,6 +1037,32 @@ static void try_umount(const char *mnt, bool check_mnt, int flags)
+@@ -557,6 +1042,32 @@ static void try_umount(const char *mnt, bool check_mnt, int flags)
  	ksu_umount_mnt(&path, flags);
  }
  
@@ -806,7 +811,7 @@ index 6a5a8800..a03d5179 100644
  LSM_HANDLER_TYPE ksu_handle_setuid(struct cred *new, const struct cred *old)
  {
  	// this hook is used for umounting overlayfs for some uid, if there isn't any module mounted, just ignore it!
-@@ -576,6 +1082,40 @@ LSM_HANDLER_TYPE ksu_handle_setuid(struct cred *new, const struct cred *old)
+@@ -576,6 +1087,40 @@ LSM_HANDLER_TYPE ksu_handle_setuid(struct cred *new, const struct cred *old)
  		return 0;
  	}
  
@@ -847,7 +852,7 @@ index 6a5a8800..a03d5179 100644
  	if (!is_appuid(new_uid) || is_unsupported_uid(new_uid.val)) {
  		// pr_info("handle setuid ignore non application or isolated uid: %d\n", new_uid.val);
  		return 0;
-@@ -585,7 +1125,21 @@ LSM_HANDLER_TYPE ksu_handle_setuid(struct cred *new, const struct cred *old)
+@@ -585,7 +1130,21 @@ LSM_HANDLER_TYPE ksu_handle_setuid(struct cred *new, const struct cred *old)
  		// pr_info("handle setuid ignore allowed application: %d\n", new_uid.val);
  		return 0;
  	}
@@ -869,7 +874,7 @@ index 6a5a8800..a03d5179 100644
  	if (!ksu_uid_should_umount(new_uid.val)) {
  		return 0;
  	} else {
-@@ -594,10 +1148,12 @@ LSM_HANDLER_TYPE ksu_handle_setuid(struct cred *new, const struct cred *old)
+@@ -594,10 +1153,12 @@ LSM_HANDLER_TYPE ksu_handle_setuid(struct cred *new, const struct cred *old)
  #endif
  	}
  
@@ -882,7 +887,7 @@ index 6a5a8800..a03d5179 100644
  	if (!is_zygote_child) {
  		pr_info("handle umount ignore non zygote child: %d\n",
  			current->pid);
-@@ -609,6 +1165,11 @@ LSM_HANDLER_TYPE ksu_handle_setuid(struct cred *new, const struct cred *old)
+@@ -609,6 +1170,11 @@ LSM_HANDLER_TYPE ksu_handle_setuid(struct cred *new, const struct cred *old)
  		current->pid);
  #endif
  
@@ -894,7 +899,7 @@ index 6a5a8800..a03d5179 100644
  	// fixme: use `collect_mounts` and `iterate_mount` to iterate all mountpoint and
  	// filter the mountpoint whose target is `/data/adb`
  	try_umount("/odm", true, 0);
-@@ -620,6 +1181,16 @@ LSM_HANDLER_TYPE ksu_handle_setuid(struct cred *new, const struct cred *old)
+@@ -620,6 +1186,16 @@ LSM_HANDLER_TYPE ksu_handle_setuid(struct cred *new, const struct cred *old)
  
  	// try umount ksu temp path
  	try_umount("/debug_ramdisk", false, MNT_DETACH);
