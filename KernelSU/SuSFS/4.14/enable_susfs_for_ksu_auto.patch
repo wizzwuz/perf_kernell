@@ -222,7 +222,7 @@ index bcdac3f0..c59be97c 100644
  	return ksu_queue_work(&ksu_save_work);
  }
 diff --git a/kernel/core_hook.c b/kernel/core_hook.c
-index 6a5a8800..4b6444f1 100644
+index 8c312d55..4fabe2ea 100644
 --- a/kernel/core_hook.c
 +++ b/kernel/core_hook.c
 @@ -22,6 +22,10 @@
@@ -750,7 +750,7 @@ index 6a5a8800..4b6444f1 100644
  	// all other cmds are for 'root manager'
  	if (!from_manager) {
  		return 0;
-@@ -519,11 +996,15 @@ static bool should_umount(struct path *path)
+@@ -518,11 +995,15 @@ static bool should_umount(struct path *path)
  		return false;
  	}
  
@@ -766,7 +766,7 @@ index 6a5a8800..4b6444f1 100644
  }
  
  static void ksu_umount_mnt(struct path *path, int flags)
-@@ -534,7 +1015,11 @@ static void ksu_umount_mnt(struct path *path, int flags)
+@@ -533,7 +1014,11 @@ static void ksu_umount_mnt(struct path *path, int flags)
  	}
  }
  
@@ -778,7 +778,7 @@ index 6a5a8800..4b6444f1 100644
  {
  	struct path path;
  	int err = kern_path(mnt, 0, &path);
-@@ -557,6 +1042,32 @@ static void try_umount(const char *mnt, bool check_mnt, int flags)
+@@ -556,6 +1041,32 @@ static void try_umount(const char *mnt, bool check_mnt, int flags)
  	ksu_umount_mnt(&path, flags);
  }
  
@@ -811,7 +811,7 @@ index 6a5a8800..4b6444f1 100644
  LSM_HANDLER_TYPE ksu_handle_setuid(struct cred *new, const struct cred *old)
  {
  	// this hook is used for umounting overlayfs for some uid, if there isn't any module mounted, just ignore it!
-@@ -576,6 +1087,40 @@ LSM_HANDLER_TYPE ksu_handle_setuid(struct cred *new, const struct cred *old)
+@@ -575,6 +1086,40 @@ LSM_HANDLER_TYPE ksu_handle_setuid(struct cred *new, const struct cred *old)
  		return 0;
  	}
  
@@ -849,11 +849,11 @@ index 6a5a8800..4b6444f1 100644
 +	}
 +#endif
 +
- 	if (!is_appuid(new_uid) || is_unsupported_uid(new_uid.val)) {
- 		// pr_info("handle setuid ignore non application or isolated uid: %d\n", new_uid.val);
- 		return 0;
-@@ -585,7 +1130,21 @@ LSM_HANDLER_TYPE ksu_handle_setuid(struct cred *new, const struct cred *old)
- 		// pr_info("handle setuid ignore allowed application: %d\n", new_uid.val);
+ 	if (is_non_appuid(new_uid)) {
+ #ifdef CONFIG_KSU_DEBUG
+ 		pr_info("handle setuid ignore non application uid: %d\n", new_uid.val);
+@@ -596,7 +1141,21 @@ LSM_HANDLER_TYPE ksu_handle_setuid(struct cred *new, const struct cred *old)
+ #endif
  		return 0;
  	}
 +#ifdef CONFIG_KSU_SUSFS
@@ -874,20 +874,7 @@ index 6a5a8800..4b6444f1 100644
  	if (!ksu_uid_should_umount(new_uid.val)) {
  		return 0;
  	} else {
-@@ -594,10 +1153,12 @@ LSM_HANDLER_TYPE ksu_handle_setuid(struct cred *new, const struct cred *old)
- #endif
- 	}
- 
-+#ifndef CONFIG_KSU_SUSFS_SUS_MOUNT
- 	// check old process's selinux context, if it is not zygote, ignore it!
- 	// because some su apps may setuid to untrusted_app but they are in global mount namespace
- 	// when we umount for such process, that is a disaster!
- 	bool is_zygote_child = is_zygote(old->security);
-+#endif
- 	if (!is_zygote_child) {
- 		pr_info("handle umount ignore non zygote child: %d\n",
- 			current->pid);
-@@ -609,6 +1170,11 @@ LSM_HANDLER_TYPE ksu_handle_setuid(struct cred *new, const struct cred *old)
+@@ -620,6 +1179,11 @@ do_umount:
  		current->pid);
  #endif
  
@@ -899,7 +886,7 @@ index 6a5a8800..4b6444f1 100644
  	// fixme: use `collect_mounts` and `iterate_mount` to iterate all mountpoint and
  	// filter the mountpoint whose target is `/data/adb`
  	try_umount("/odm", true, 0);
-@@ -620,6 +1186,16 @@ LSM_HANDLER_TYPE ksu_handle_setuid(struct cred *new, const struct cred *old)
+@@ -631,6 +1195,16 @@ do_umount:
  
  	// try umount ksu temp path
  	try_umount("/debug_ramdisk", false, MNT_DETACH);
