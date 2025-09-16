@@ -77,7 +77,7 @@ KERNEL_DIR="$WORKDIR/$KERNEL_NAME"
 
 KERNELSU_SOURCE="https://github.com/$KERNELSU_REPO"
 CLANG_SOURCE="https://gitlab.com/$CLANG_REPO"
-README="https://github.com/selfmusing/perf_kernel/blob/master/README.md"
+README="https://github.com/wizzwuz/perf_kernel/blob/master/README.md"
 
 if [[ ! -z "$COMMON_DEFCONFIG" ]]; then
     DEVICE_DEFCONFIG=$7
