@@ -9,7 +9,7 @@ KERNEL_GIT="https://github.com/selfmusing/kernel_xiaomi_violet.git"
 KERNEL_BRANCH="14"
 
 # KernelSU
-KERNELSU_REPO="selfmusing/USlenreK"
+KERNELSU_REPO="tiann/KernelSU"
 KSU_ENABLED="false"
 
 # KernelSU Custom Manager
